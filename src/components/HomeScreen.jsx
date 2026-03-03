@@ -2,12 +2,12 @@ import { colors } from '../theme';
 import CooLogo from './CooLogo';
 
 const PLAYLISTS = [
-  { name: 'Calm & Settle',     icon: '🌊', desc: 'Nervous system downshift' },
-  { name: 'Big Feelings',      icon: '🌿', desc: 'Emotional support during distress' },
-  { name: 'Teething & Comfort',icon: '☁️', desc: 'Gentle soothing for physical discomfort' },
-  { name: 'Sleep Wind-Down',   icon: '🌙', desc: 'Bedtime transition' },
-  { name: 'Immune Support',    icon: '✨', desc: 'General wellness ambience' },
-  { name: 'Bonding',           icon: '🤍', desc: 'Connection time with your baby' },
+  { name: 'Calm & Settle',      icon: '🌊', desc: 'Pink noise · nervous system downshift' },
+  { name: 'Big Feelings',       icon: '🌿', desc: 'Brown noise · deep enveloping calm' },
+  { name: 'Teething & Comfort', icon: '☁️', desc: 'White noise · womb-like soothing' },
+  { name: 'Sleep Wind-Down',    icon: '🌙', desc: 'Pink noise · heartbeat · bedtime' },
+  { name: 'Immune Support',     icon: '✨', desc: 'Pink noise · gentle wellness ambience' },
+  { name: 'Bonding',            icon: '🤍', desc: 'Heartbeat · pink noise · connection' },
 ];
 
 export default function HomeScreen({ onPlay, selectedPlaylist, onSelectPlaylist }) {

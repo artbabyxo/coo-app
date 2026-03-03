@@ -1,29 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
-import { startTone, stopTone, getPlaylistFreqs } from '../audioEngine';
+import { startSession, stopSession, getPlaylistLabel } from '../audioEngine';
 
-const SESSION_DURATION = 10 * 60; // 10 minutes default
+const SESSION_DURATION = 10 * 60; // 10 minutes
 
 export default function PlayerScreen({ playlist, onBack }) {
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [ripple, setRipple] = useState(0);
   const intervalRef = useRef(null);
-  const rippleRef = useRef(null);
 
   useEffect(() => {
     return () => {
-      stopTone(0.5);
+      stopSession(0.5);
       clearInterval(intervalRef.current);
-      clearInterval(rippleRef.current);
     };
   }, []);
 
   function handleToggle() {
     if (!playing) {
-      const freqs = getPlaylistFreqs(playlist);
-      startTone(freqs);
+      startSession(playlist);
       setPlaying(true);
       intervalRef.current = setInterval(() => {
         setElapsed(e => {
@@ -34,19 +30,15 @@ export default function PlayerScreen({ playlist, onBack }) {
           return e + 1;
         });
       }, 1000);
-      rippleRef.current = setInterval(() => {
-        setRipple(r => r + 1);
-      }, 3000);
     } else {
       handleStop();
     }
   }
 
   function handleStop() {
-    stopTone();
+    stopSession();
     setPlaying(false);
     clearInterval(intervalRef.current);
-    clearInterval(rippleRef.current);
   }
 
   function handleBack() {
@@ -59,15 +51,12 @@ export default function PlayerScreen({ playlist, onBack }) {
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
   const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
   const circumference = 2 * Math.PI * 54;
   const strokeDash = circumference * (1 - progress);
 
   return (
     <div style={styles.container}>
-      <button style={styles.backBtn} onClick={handleBack}>
-        ← back
-      </button>
+      <button style={styles.backBtn} onClick={handleBack}>← back</button>
 
       <CooLogo height={36} color={colors.textMuted} />
       <div style={styles.playlistName}>{playlist}</div>
@@ -80,14 +69,8 @@ export default function PlayerScreen({ playlist, onBack }) {
             <div style={{ ...styles.ripple, animationDelay: '2s' }} />
           </>
         )}
-
         <svg width="140" height="140" style={styles.progressRing}>
-          <circle
-            cx="70" cy="70" r="54"
-            fill="none"
-            stroke={colors.surfaceDeep}
-            strokeWidth="2"
-          />
+          <circle cx="70" cy="70" r="54" fill="none" stroke={colors.surfaceDeep} strokeWidth="2" />
           <circle
             cx="70" cy="70" r="54"
             fill="none"
@@ -100,7 +83,6 @@ export default function PlayerScreen({ playlist, onBack }) {
             style={{ transition: 'stroke-dashoffset 1s linear' }}
           />
         </svg>
-
         <button style={styles.orb} onClick={handleToggle}>
           <span style={styles.orbLabel}>{playing ? 'pause' : 'play'}</span>
         </button>
@@ -110,13 +92,13 @@ export default function PlayerScreen({ playlist, onBack }) {
 
       <p style={styles.breathCue}>
         {playing
-          ? 'breathe with your baby. you\'re already doing it.'
-          : 'press play when you\'re ready.'}
+          ? "breathe with your baby. you're already doing it."
+          : "press play when you're ready."}
       </p>
 
-      <div style={styles.freqPill}>
-        {getPlaylistFreqs(playlist).join(' · ')} hz
-      </div>
+      <div style={styles.soundPill}>{getPlaylistLabel(playlist)}</div>
+
+      <p style={styles.volumeNote}>keep volume comfortable · device away from baby</p>
     </div>
   );
 }
@@ -130,7 +112,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '48px 24px',
-    gap: '28px',
+    gap: '24px',
     boxSizing: 'border-box',
     position: 'relative',
   },
@@ -211,7 +193,7 @@ const styles = {
     lineHeight: 1.8,
     fontStyle: 'italic',
   },
-  freqPill: {
+  soundPill: {
     background: colors.surface,
     border: `1px solid ${colors.surfaceDeep}`,
     borderRadius: '20px',
@@ -219,5 +201,11 @@ const styles = {
     fontSize: '11px',
     color: colors.textMuted,
     letterSpacing: '0.1em',
+  },
+  volumeNote: {
+    fontSize: '10px',
+    color: colors.surfaceDeep,
+    letterSpacing: '0.08em',
+    textAlign: 'center',
   },
 };
