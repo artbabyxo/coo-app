@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { colors } from '../theme';
+import CooLogo from './CooLogo';
 import { startTone, stopTone, getPlaylistFreqs } from '../audioEngine';
 
 const SESSION_DURATION = 10 * 60; // 10 minutes default
@@ -68,6 +69,7 @@ export default function PlayerScreen({ playlist, onBack }) {
         ← back
       </button>
 
+      <CooLogo height={36} color={colors.textMuted} />
       <div style={styles.playlistName}>{playlist}</div>
 
       <div style={styles.orbContainer}>

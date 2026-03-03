@@ -1,4 +1,5 @@
 import { colors } from '../theme';
+import CooLogo from './CooLogo';
 
 const PLAYLISTS = [
   { name: 'Calm & Settle',     icon: '🌊', desc: 'Nervous system downshift' },
@@ -13,7 +14,7 @@ export default function HomeScreen({ onPlay, selectedPlaylist, onSelectPlaylist 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.logo}>coo</h1>
+        <CooLogo height={64} color={colors.text} />
         <p style={styles.tagline}>a gentle sound companion</p>
       </div>
 
