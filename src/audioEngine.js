@@ -79,20 +79,22 @@ function scheduleHeartbeat(ctx, targetGain) {
 
   function schedulePulse(time) {
     // LUB — stronger, lower
+    // Frequencies raised to 120→90 Hz (from 70→48) for phone speaker audibility
     const lubEnv = ctx.createGain();
     lubEnv.gain.setValueAtTime(0, time);
     lubEnv.gain.linearRampToValueAtTime(0.38, time + 0.015);
     lubEnv.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
     const lubOsc = ctx.createOscillator();
     lubOsc.type = 'sine';
-    lubOsc.frequency.setValueAtTime(70, time);
-    lubOsc.frequency.exponentialRampToValueAtTime(48, time + 0.15);
+    lubOsc.frequency.setValueAtTime(120, time);
+    lubOsc.frequency.exponentialRampToValueAtTime(90, time + 0.15);
     lubOsc.connect(lubEnv);
     lubEnv.connect(targetGain);
     lubOsc.start(time);
     lubOsc.stop(time + 0.18);
 
     // DUB — softer, slightly higher, ~240ms after lub
+    // Frequencies raised to 100→78 Hz (from 60→42) for phone speaker audibility
     const dubTime = time + 0.26;
     const dubEnv = ctx.createGain();
     dubEnv.gain.setValueAtTime(0, dubTime);
@@ -100,8 +102,8 @@ function scheduleHeartbeat(ctx, targetGain) {
     dubEnv.gain.exponentialRampToValueAtTime(0.001, dubTime + 0.12);
     const dubOsc = ctx.createOscillator();
     dubOsc.type = 'sine';
-    dubOsc.frequency.setValueAtTime(60, dubTime);
-    dubOsc.frequency.exponentialRampToValueAtTime(42, dubTime + 0.12);
+    dubOsc.frequency.setValueAtTime(100, dubTime);
+    dubOsc.frequency.exponentialRampToValueAtTime(78, dubTime + 0.12);
     dubOsc.connect(dubEnv);
     dubEnv.connect(targetGain);
     dubOsc.start(dubTime);
@@ -159,12 +161,12 @@ function startBinauralDrone(ctx, carrier, beat, targetGain) {
 //             Delta 0.5-4 Hz → deep sleep / restoration
 
 export const PLAYLIST_SOUNDS = {
-  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 120, beat: 10 }, label: 'Pink noise · Alpha drone' },
-  'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 100, beat: 8  }, label: 'Brown noise · Alpha drone' },
-  'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 150, beat: 2  }, label: 'White noise · Delta drone' },
-  'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 110, beat: 2  }, label: 'Pink noise · heartbeat · Delta drone' },
-  'Immune Support':     { noise: 'pink',  heartbeat: false, drone: { carrier: 130, beat: 10 }, label: 'Pink noise · Alpha drone' },
-  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 136, beat: 6  }, label: 'Heartbeat · Theta drone' },
+  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, label: 'Pink noise · Alpha drone' },
+  'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 200, beat: 8  }, label: 'Brown noise · Alpha drone' },
+  'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, label: 'White noise · Delta drone' },
+  'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, label: 'Pink noise · heartbeat · Delta drone' },
+  'Immune Support':     { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, label: 'Pink noise · Alpha drone' },
+  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 200, beat: 6  }, label: 'Heartbeat · Theta drone' },
 };
 
 // --- Public API ---
@@ -223,17 +225,27 @@ export function stopSession(fadeDuration = 2) {
     schedulerInterval = null;
   }
   if (!audioCtx || !masterGain) return;
+
+  // Snapshot and clear state immediately so a new session starting right after
+  // this call doesn't have its nodes caught by the delayed cleanup timeout.
+  const nodesToStop = [...activeNodes];
+  activeNodes = [];
+  noiseGainNode = null;
+  droneGainNode = null;
+  hbGainNode = null;
+
   const now = audioCtx.currentTime;
+  masterGain.gain.cancelScheduledValues(now);
+  masterGain.gain.setValueAtTime(masterGain.gain.value, now);
   masterGain.gain.linearRampToValueAtTime(0, now + fadeDuration);
+
   const ctx = audioCtx;
+  audioCtx = null;
+  masterGain = null;
+
   setTimeout(() => {
-    activeNodes.forEach(n => { try { n.stop(); } catch {} });
-    activeNodes = [];
-    noiseGainNode = null;
-    droneGainNode = null;
-    hbGainNode = null;
+    nodesToStop.forEach(n => { try { n.stop(); } catch {} });
     try { ctx.close(); } catch {}
-    if (audioCtx === ctx) { audioCtx = null; masterGain = null; }
   }, (fadeDuration + 0.2) * 1000);
 }
 
