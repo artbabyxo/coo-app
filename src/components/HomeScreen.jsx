@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
-import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS, resumeContext } from '../audioEngine';
+import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS } from '../audioEngine';
 
 const PLAYLISTS = [
   { name: 'Calm & Settle',      short: 'Calm',     icon: '🌊' },
@@ -72,10 +72,9 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
     setHeartbeatVol(100);
   }, [selectedPlaylist]);
 
-  function handlePlayPause() {
-    resumeContext();
+  async function handlePlayPause() {
     if (!playing) {
-      startSession(selectedPlaylist);
+      await startSession(selectedPlaylist);
       setPlaying(true);
       setElapsed(0);
       intervalRef.current = setInterval(() => {

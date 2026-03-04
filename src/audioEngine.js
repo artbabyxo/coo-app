@@ -171,13 +171,14 @@ export const PLAYLIST_SOUNDS = {
 
 // --- Public API ---
 
-export function startSession(playlistName, volume = 0.38) {
+export async function startSession(playlistName, volume = 0.38) {
   stopSession(0);
 
   const config = PLAYLIST_SOUNDS[playlistName] || { noise: 'pink', heartbeat: false };
 
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  audioCtx.resume(); // iOS Safari creates AudioContext suspended — must resume immediately
+  // iOS Safari starts AudioContext suspended — await resume before building graph
+  await audioCtx.resume();
   masterGain = audioCtx.createGain();
   masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
   masterGain.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + 2.5);
