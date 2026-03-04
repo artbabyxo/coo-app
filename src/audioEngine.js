@@ -4,6 +4,8 @@
 // - Brown noise (Big Feelings) — deepest, most enveloping
 // - White noise (Teething) — most researched for infants, womb-like
 // - Heartbeat (Bonding, Sleep Wind-Down) — maternal heartbeat ~68 bpm, neural entrainment research
+// - Binaural drone (all playlists) — sustained carrier tone + binaural beat tuned to each playlist's intention
+//   Binaural beats require headphones for full effect; still pleasant as dual-tone drone without them
 
 let audioCtx = null;
 let masterGain = null;
@@ -110,15 +112,54 @@ function scheduleHeartbeat(ctx, targetGain) {
   }, 25);
 }
 
+// --- Binaural drone generator ---
+// carrier: base frequency (Hz) — low sine tone, same both ears
+// beat: binaural beat frequency (Hz) — left ear gets carrier, right gets carrier+beat
+// Volume kept very low (0.07) so it sits beneath noise, felt more than heard
+
+function startBinauralDrone(ctx, carrier, beat, targetGain) {
+  const merger = ctx.createChannelMerger(2);
+  merger.connect(targetGain);
+
+  // Left ear — carrier frequency
+  const leftOsc = ctx.createOscillator();
+  leftOsc.type = 'sine';
+  leftOsc.frequency.value = carrier;
+  const leftGain = ctx.createGain();
+  leftGain.gain.value = 1;
+  leftOsc.connect(leftGain);
+  leftGain.connect(merger, 0, 0);
+  leftOsc.start();
+
+  // Right ear — carrier + beat frequency
+  const rightOsc = ctx.createOscillator();
+  rightOsc.type = 'sine';
+  rightOsc.frequency.value = carrier + beat;
+  const rightGain = ctx.createGain();
+  rightGain.gain.value = 1;
+  rightOsc.connect(rightGain);
+  rightGain.connect(merger, 0, 1);
+  rightOsc.start();
+
+  return [leftOsc, rightOsc];
+}
+
 // --- Playlist → sound config ---
 
+// Drone config per playlist:
+//   carrier — low tone that grounds the mix (Hz)
+//   beat    — binaural frequency difference (Hz)
+//             Alpha 8-12 Hz → relaxed alertness
+//             Theta 4-8 Hz  → deep relaxation / meditative
+//             Delta 0.5-4 Hz → deep sleep / restoration
+
 export const PLAYLIST_SOUNDS = {
-  'Calm & Settle':      { noise: 'pink',  heartbeat: false, label: 'Pink noise' },
-  'Big Feelings':       { noise: 'brown', heartbeat: false, label: 'Brown noise' },
-  'Teething & Comfort': { noise: 'white', heartbeat: false, label: 'White noise' },
-  'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  label: 'Pink noise · heartbeat' },
-  'Immune Support':     { noise: 'pink',  heartbeat: false, label: 'Pink noise' },
-  'Bonding':            { noise: 'pink',  heartbeat: true,  label: 'Heartbeat · Pink noise' },
+  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 120, beat: 10 }, label: 'Pink noise · Alpha drone' },
+  'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 100, beat: 8  }, label: 'Brown noise · Alpha drone' },
+  'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 150, beat: 2  }, label: 'White noise · Delta drone' },
+  'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 110, beat: 2  }, label: 'Pink noise · heartbeat · Delta drone' },
+  'Immune Support':     { noise: 'pink',  heartbeat: false, drone: { carrier: 130, beat: 10 }, label: 'Pink noise · Alpha drone' },
+  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 136, beat: 6  }, label: 'Heartbeat · Theta drone' },
 };
 
 // --- Public API ---
@@ -157,6 +198,16 @@ export function startSession(playlistName, volume = 0.38) {
     hbGain.gain.value = 0.85;
     hbGain.connect(masterGain);
     schedulerInterval = scheduleHeartbeat(audioCtx, hbGain);
+  }
+
+  // Binaural drone layer — sits underneath, felt more than heard
+  if (config.drone) {
+    const droneGain = audioCtx.createGain();
+    droneGain.gain.setValueAtTime(0, audioCtx.currentTime);
+    droneGain.gain.linearRampToValueAtTime(0.07, audioCtx.currentTime + 5); // slow fade in
+    droneGain.connect(masterGain);
+    const droneNodes = startBinauralDrone(audioCtx, config.drone.carrier, config.drone.beat, droneGain);
+    activeNodes.push(...droneNodes);
   }
 }
 
