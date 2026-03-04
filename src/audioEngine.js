@@ -82,7 +82,7 @@ function scheduleHeartbeat(ctx, targetGain) {
     // Frequencies raised to 120→90 Hz (from 70→48) for phone speaker audibility
     const lubEnv = ctx.createGain();
     lubEnv.gain.setValueAtTime(0, time);
-    lubEnv.gain.linearRampToValueAtTime(0.38, time + 0.015);
+    lubEnv.gain.linearRampToValueAtTime(0.65, time + 0.015);
     lubEnv.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
     const lubOsc = ctx.createOscillator();
     lubOsc.type = 'sine';
@@ -98,7 +98,7 @@ function scheduleHeartbeat(ctx, targetGain) {
     const dubTime = time + 0.26;
     const dubEnv = ctx.createGain();
     dubEnv.gain.setValueAtTime(0, dubTime);
-    dubEnv.gain.linearRampToValueAtTime(0.22, dubTime + 0.015);
+    dubEnv.gain.linearRampToValueAtTime(0.40, dubTime + 0.015);
     dubEnv.gain.exponentialRampToValueAtTime(0.001, dubTime + 0.12);
     const dubOsc = ctx.createOscillator();
     dubOsc.type = 'sine';
@@ -203,7 +203,7 @@ export function startSession(playlistName, volume = 0.38) {
   hbGainNode = null;
   if (config.heartbeat) {
     hbGainNode = audioCtx.createGain();
-    hbGainNode.gain.value = 0.85;
+    hbGainNode.gain.value = 1.0;
     hbGainNode.connect(masterGain);
     schedulerInterval = scheduleHeartbeat(audioCtx, hbGainNode);
   }

@@ -59,7 +59,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
   const [noiseVol, setNoiseVol] = useState(hasHeartbeat ? 55 : 100);
   const [droneVol, setDroneVol] = useState(10);
-  const [heartbeatVol, setHeartbeatVol] = useState(85);
+  const [heartbeatVol, setHeartbeatVol] = useState(100);
 
   useEffect(() => {
     return () => { stopSession(0.5); clearInterval(intervalRef.current); };
@@ -69,7 +69,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
     const cfg = PLAYLIST_SOUNDS[selectedPlaylist] || {};
     setNoiseVol(cfg.heartbeat ? 55 : 100);
     setDroneVol(10);
-    setHeartbeatVol(85);
+    setHeartbeatVol(100);
   }, [selectedPlaylist]);
 
   function handlePlayPause() {
