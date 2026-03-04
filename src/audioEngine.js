@@ -18,6 +18,26 @@ let noiseGainNode = null;
 let droneGainNode = null;
 let hbGainNode = null;
 
+// --- iOS mute switch bypass ---
+// A looping silent HTML audio element forces iOS into media playback mode,
+// which bypasses the hardware mute/silent switch. Completely inaudible.
+let silentAudio = null;
+
+function getSilentAudio() {
+  if (silentAudio) return silentAudio;
+  // Minimal valid WAV: 1 sample of silence, 44100 Hz, 16-bit mono
+  const wav = new Uint8Array([
+    0x52,0x49,0x46,0x46,0x26,0x00,0x00,0x00,0x57,0x41,0x56,0x45,
+    0x66,0x6d,0x74,0x20,0x10,0x00,0x00,0x00,0x01,0x00,0x01,0x00,
+    0x44,0xac,0x00,0x00,0x88,0x58,0x01,0x00,0x02,0x00,0x10,0x00,
+    0x64,0x61,0x74,0x61,0x02,0x00,0x00,0x00,0x00,0x00,
+  ]);
+  const blob = new Blob([wav], { type: 'audio/wav' });
+  silentAudio = new Audio(URL.createObjectURL(blob));
+  silentAudio.loop = true;
+  return silentAudio;
+}
+
 // --- Noise buffer generators ---
 
 function makeWhiteBuffer(ctx) {
@@ -178,15 +198,16 @@ export function startSession(playlistName, volume = 0.38) {
 
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-  // iOS Safari unlock: play a silent one-sample buffer synchronously within the
-  // user gesture. This transitions the context from suspended → running immediately.
-  // Must stay synchronous — async/await breaks the iOS gesture chain.
+  // iOS unlock: silent Web Audio buffer transitions context suspended → running.
+  // Silent HTML audio element bypasses the hardware mute/silent switch.
+  // Both must be called synchronously within the user gesture.
   const silentBuf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
   const silentSrc = audioCtx.createBufferSource();
   silentSrc.buffer = silentBuf;
   silentSrc.connect(audioCtx.destination);
   silentSrc.start(0);
   audioCtx.resume();
+  getSilentAudio().play().catch(() => {});
 
   masterGain = audioCtx.createGain();
   masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
@@ -231,6 +252,7 @@ export function startSession(playlistName, volume = 0.38) {
 }
 
 export function stopSession(fadeDuration = 2) {
+  silentAudio?.pause();
   if (schedulerInterval) {
     clearInterval(schedulerInterval);
     schedulerInterval = null;
