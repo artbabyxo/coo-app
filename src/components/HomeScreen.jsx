@@ -72,9 +72,9 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
     setHeartbeatVol(100);
   }, [selectedPlaylist]);
 
-  async function handlePlayPause() {
+  function handlePlayPause() {
     if (!playing) {
-      await startSession(selectedPlaylist);
+      startSession(selectedPlaylist);
       setPlaying(true);
       setElapsed(0);
       intervalRef.current = setInterval(() => {

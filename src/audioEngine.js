@@ -171,14 +171,23 @@ export const PLAYLIST_SOUNDS = {
 
 // --- Public API ---
 
-export async function startSession(playlistName, volume = 0.38) {
+export function startSession(playlistName, volume = 0.38) {
   stopSession(0);
 
   const config = PLAYLIST_SOUNDS[playlistName] || { noise: 'pink', heartbeat: false };
 
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  // iOS Safari starts AudioContext suspended — await resume before building graph
-  await audioCtx.resume();
+
+  // iOS Safari unlock: play a silent one-sample buffer synchronously within the
+  // user gesture. This transitions the context from suspended → running immediately.
+  // Must stay synchronous — async/await breaks the iOS gesture chain.
+  const silentBuf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+  const silentSrc = audioCtx.createBufferSource();
+  silentSrc.buffer = silentBuf;
+  silentSrc.connect(audioCtx.destination);
+  silentSrc.start(0);
+  audioCtx.resume();
+
   masterGain = audioCtx.createGain();
   masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
   masterGain.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + 2.5);
