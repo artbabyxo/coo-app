@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
-import { startSession, stopSession, getPlaylistLabel } from '../audioEngine';
+import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS } from '../audioEngine';
 
 const SESSION_DURATION = 10 * 60; // 10 minutes
 
@@ -9,6 +9,28 @@ export default function PlayerScreen({ playlist, onBack }) {
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const intervalRef = useRef(null);
+  const [mixerOpen, setMixerOpen] = useState(false);
+
+  const config = PLAYLIST_SOUNDS[playlist] || {};
+  const hasHeartbeat = !!config.heartbeat;
+  const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
+
+  const [noiseVol, setNoiseVol] = useState(hasHeartbeat ? 55 : 100);
+  const [droneVol, setDroneVol] = useState(10);
+  const [heartbeatVol, setHeartbeatVol] = useState(85);
+
+  function handleNoiseChange(val) {
+    setNoiseVol(val);
+    setLayerGain('noise', val / 100);
+  }
+  function handleDroneChange(val) {
+    setDroneVol(val);
+    setLayerGain('drone', val / 100);
+  }
+  function handleHeartbeatChange(val) {
+    setHeartbeatVol(val);
+    setLayerGain('heartbeat', val / 100);
+  }
 
   useEffect(() => {
     return () => {
@@ -99,9 +121,71 @@ export default function PlayerScreen({ playlist, onBack }) {
       <div style={styles.soundPill}>{getPlaylistLabel(playlist)}</div>
 
       <p style={styles.volumeNote}>keep volume comfortable · device away from baby</p>
+
+      {/* Mixer panel — bottom right corner */}
+      <div style={styles.mixerWrap}>
+        <button style={styles.mixerToggle} onClick={() => setMixerOpen(o => !o)}>
+          {mixerOpen ? '✕' : 'mixer'}
+        </button>
+        {mixerOpen && (
+          <div style={styles.mixerPanel}>
+            <MixerSlider label={noiseName} value={noiseVol} onChange={handleNoiseChange} />
+            <MixerSlider label="binaural drone" value={droneVol} onChange={handleDroneChange} />
+            {hasHeartbeat && (
+              <MixerSlider label="heartbeat" value={heartbeatVol} onChange={handleHeartbeatChange} />
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+function MixerSlider({ label, value, onChange }) {
+  return (
+    <div style={mixerStyles.row}>
+      <span style={mixerStyles.label}>{label}</span>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        style={mixerStyles.slider}
+      />
+      <span style={mixerStyles.pct}>{value}%</span>
+    </div>
+  );
+}
+
+const mixerStyles = {
+  row: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    width: '100%',
+  },
+  label: {
+    fontSize: '10px',
+    color: colors.textMuted,
+    letterSpacing: '0.06em',
+    width: '90px',
+    flexShrink: 0,
+    textAlign: 'right',
+  },
+  slider: {
+    flex: 1,
+    accentColor: colors.blueMid,
+    cursor: 'pointer',
+  },
+  pct: {
+    fontSize: '10px',
+    color: colors.textMuted,
+    width: '28px',
+    textAlign: 'right',
+    fontVariantNumeric: 'tabular-nums',
+  },
+};
 
 const styles = {
   container: {
@@ -207,5 +291,34 @@ const styles = {
     color: colors.surfaceDeep,
     letterSpacing: '0.08em',
     textAlign: 'center',
+  },
+  mixerWrap: {
+    position: 'absolute',
+    bottom: '24px',
+    right: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: '8px',
+  },
+  mixerToggle: {
+    background: 'none',
+    border: `1px solid ${colors.surfaceDeep}`,
+    borderRadius: '12px',
+    padding: '4px 10px',
+    fontSize: '10px',
+    color: colors.textMuted,
+    letterSpacing: '0.08em',
+    cursor: 'pointer',
+  },
+  mixerPanel: {
+    background: colors.surface,
+    border: `1px solid ${colors.surfaceDeep}`,
+    borderRadius: '12px',
+    padding: '12px 14px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    width: '240px',
   },
 };

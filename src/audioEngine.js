@@ -13,6 +13,11 @@ let activeNodes = [];
 let schedulerInterval = null;
 let nextBeatTime = 0;
 
+// Live gain node refs — updated by setLayerGain()
+let noiseGainNode = null;
+let droneGainNode = null;
+let hbGainNode = null;
+
 // --- Noise buffer generators ---
 
 function makeWhiteBuffer(ctx) {
@@ -181,32 +186,33 @@ export function startSession(playlistName, volume = 0.38) {
     config.noise === 'brown' ? makeBrownBuffer(audioCtx) :
     makePinkBuffer(audioCtx);
 
-  const noiseGain = audioCtx.createGain();
-  noiseGain.gain.value = config.heartbeat ? 0.55 : 1.0;
+  noiseGainNode = audioCtx.createGain();
+  noiseGainNode.gain.value = config.heartbeat ? 0.55 : 1.0;
 
   const noiseSource = audioCtx.createBufferSource();
   noiseSource.buffer = noiseBuf;
   noiseSource.loop = true;
-  noiseSource.connect(noiseGain);
-  noiseGain.connect(masterGain);
+  noiseSource.connect(noiseGainNode);
+  noiseGainNode.connect(masterGain);
   noiseSource.start();
   activeNodes.push(noiseSource);
 
   // Heartbeat layer
+  hbGainNode = null;
   if (config.heartbeat) {
-    const hbGain = audioCtx.createGain();
-    hbGain.gain.value = 0.85;
-    hbGain.connect(masterGain);
-    schedulerInterval = scheduleHeartbeat(audioCtx, hbGain);
+    hbGainNode = audioCtx.createGain();
+    hbGainNode.gain.value = 0.85;
+    hbGainNode.connect(masterGain);
+    schedulerInterval = scheduleHeartbeat(audioCtx, hbGainNode);
   }
 
-  // Binaural drone layer — sits underneath, felt more than heard
+  // Binaural drone layer
+  droneGainNode = null;
   if (config.drone) {
-    const droneGain = audioCtx.createGain();
-    droneGain.gain.setValueAtTime(0, audioCtx.currentTime);
-    droneGain.gain.linearRampToValueAtTime(0.07, audioCtx.currentTime + 5); // slow fade in
-    droneGain.connect(masterGain);
-    const droneNodes = startBinauralDrone(audioCtx, config.drone.carrier, config.drone.beat, droneGain);
+    droneGainNode = audioCtx.createGain();
+    droneGainNode.gain.value = 0.10;
+    droneGainNode.connect(masterGain);
+    const droneNodes = startBinauralDrone(audioCtx, config.drone.carrier, config.drone.beat, droneGainNode);
     activeNodes.push(...droneNodes);
   }
 }
@@ -223,6 +229,9 @@ export function stopSession(fadeDuration = 2) {
   setTimeout(() => {
     activeNodes.forEach(n => { try { n.stop(); } catch {} });
     activeNodes = [];
+    noiseGainNode = null;
+    droneGainNode = null;
+    hbGainNode = null;
     try { ctx.close(); } catch {}
     if (audioCtx === ctx) { audioCtx = null; masterGain = null; }
   }, (fadeDuration + 0.2) * 1000);
@@ -234,4 +243,12 @@ export function getPlaylistLabel(name) {
 
 export function resumeContext() {
   if (audioCtx?.state === 'suspended') audioCtx.resume();
+}
+
+// layer: 'noise' | 'drone' | 'heartbeat'
+// value: 0.0 – 1.0
+export function setLayerGain(layer, value) {
+  if (layer === 'noise' && noiseGainNode) noiseGainNode.gain.value = value;
+  if (layer === 'drone' && droneGainNode) droneGainNode.gain.value = value;
+  if (layer === 'heartbeat' && hbGainNode) hbGainNode.gain.value = value;
 }
