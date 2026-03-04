@@ -177,6 +177,7 @@ export function startSession(playlistName, volume = 0.38) {
   const config = PLAYLIST_SOUNDS[playlistName] || { noise: 'pink', heartbeat: false };
 
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume(); // iOS Safari creates AudioContext suspended — must resume immediately
   masterGain = audioCtx.createGain();
   masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
   masterGain.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + 2.5);
