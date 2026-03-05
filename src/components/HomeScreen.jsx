@@ -3,13 +3,52 @@ import { colors } from '../theme';
 import CooLogo from './CooLogo';
 import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS } from '../audioEngine';
 
+const WavesIcon = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+    <path d="M2 8.5 Q5.5 4.5 9 8.5 Q12.5 12.5 16 8.5 Q19.5 4.5 23 8.5" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+    <path d="M2 15.5 Q5.5 11.5 9 15.5 Q12.5 19.5 16 15.5 Q19.5 11.5 23 15.5" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+  </svg>
+);
+
+const FlameIcon = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="white">
+    <path d="M12 2 C10 5 7 9 7 14 a5 5 0 0 0 10 0 C17 9 14 5 12 2Z"/>
+  </svg>
+);
+
+const BurstIcon = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="white">
+    <path d="M12 2 L13.5 8.5 L19.5 4.5 L16 10.5 L22 12 L16 13.5 L19.5 19.5 L13.5 15.5 L12 22 L10.5 15.5 L4.5 19.5 L8 13.5 L2 12 L8 10.5 L4.5 4.5 L10.5 8.5 Z"/>
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="white">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+);
+
+const SparklesIcon = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="white">
+    <path d="M16 3 L17.1 7.9 L22 9 L17.1 10.1 L16 15 L14.9 10.1 L10 9 L14.9 7.9 Z"/>
+    <path d="M5.5 2 L6.2 4.8 L9 5.5 L6.2 6.2 L5.5 9 L4.8 6.2 L2 5.5 L4.8 4.8 Z"/>
+    <path d="M6.5 15 L7.1 17.4 L9.5 18 L7.1 18.6 L6.5 21 L5.9 18.6 L3.5 18 L5.9 17.4 Z"/>
+  </svg>
+);
+
+const HeartIcon = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="white">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+  </svg>
+);
+
 const PLAYLISTS = [
-  { name: 'Calm & Settle',      short: 'Calm',     icon: '🌊' },
-  { name: 'Big Feelings',       short: 'Big',      icon: '🌿' },
-  { name: 'Teething & Comfort', short: 'Teething', icon: '☁️' },
-  { name: 'Sleep Wind-Down',    short: 'Sleep',    icon: '🌙' },
-  { name: 'Immune Support',     short: 'Immune',   icon: '✨' },
-  { name: 'Bonding',            short: 'Bonding',  icon: '🤍' },
+  { name: 'Calm & Settle',      short: 'Calm',     Icon: WavesIcon   },
+  { name: 'Big Feelings',       short: 'Feelings', Icon: FlameIcon   },
+  { name: 'Teething & Comfort', short: 'Teething', Icon: BurstIcon   },
+  { name: 'Sleep Wind-Down',    short: 'Sleep',    Icon: MoonIcon    },
+  { name: 'Immune Support',     short: 'Immune',   Icon: SparklesIcon},
+  { name: 'Bonding',            short: 'Bonding',  Icon: HeartIcon   },
 ];
 
 const ORBIT_RADIUS = 138;
@@ -140,7 +179,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                 boxShadow: selected ? `0 4px 16px ${colors.blueMid}44` : 'none',
               }}
             >
-              <span style={styles.bubbleIcon}>{p.icon}</span>
+              <p.Icon />
               <span style={{ ...styles.bubbleLabel, color: selected ? colors.text : colors.textMuted }}>
                 {p.short}
               </span>
