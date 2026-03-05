@@ -219,11 +219,22 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
       {/* Mixer */}
       <div style={styles.mixerWrap}>
-        <button style={styles.mixerToggle} onClick={() => setMixerOpen(o => !o)}>
-          {mixerOpen ? '✕' : 'mixer'}
+        <button style={{ ...styles.mixerToggle, background: mixerOpen ? colors.blueMid : colors.surface }} onClick={() => setMixerOpen(o => !o)} aria-label="Toggle mixer">
+          {mixerOpen
+            ? <span style={{ fontSize: '14px', color: colors.white, lineHeight: 1 }}>✕</span>
+            : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" stroke="white" strokeWidth="2"/>
+                <circle cx="8" cy="6" r="2.5" fill="white"/>
+                <line x1="3" y1="12" x2="21" y2="12" stroke="white" strokeWidth="2"/>
+                <circle cx="16" cy="12" r="2.5" fill="white"/>
+                <line x1="3" y1="18" x2="21" y2="18" stroke="white" strokeWidth="2"/>
+                <circle cx="10" cy="18" r="2.5" fill="white"/>
+              </svg>
+          }
         </button>
         {mixerOpen && (
           <div style={styles.mixerPanel}>
+            <p style={styles.mixerTitle}>sound mix</p>
             <MixerSlider label={noiseName} value={noiseVol} onChange={v => { setNoiseVol(v); setLayerGain('noise', v / 100); }} />
             <MixerSlider label="binaural drone" value={droneVol} onChange={v => { setDroneVol(v); setLayerGain('drone', v / 100); }} />
             {hasHeartbeat && (
@@ -343,31 +354,40 @@ const styles = {
   },
   mixerWrap: {
     position: 'absolute',
-    bottom: '24px',
+    top: '20px',
     right: '20px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end',
-    gap: '8px',
+    gap: '10px',
   },
   mixerToggle: {
-    background: 'none',
+    width: '44px',
+    height: '44px',
+    borderRadius: '50%',
     border: `1px solid ${colors.surfaceDeep}`,
-    borderRadius: '12px',
-    padding: '4px 10px',
-    fontSize: '10px',
-    color: colors.textMuted,
-    letterSpacing: '0.08em',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     cursor: 'pointer',
+    transition: 'background 0.2s ease',
+    flexShrink: 0,
   },
   mixerPanel: {
     background: colors.surface,
     border: `1px solid ${colors.surfaceDeep}`,
-    borderRadius: '12px',
-    padding: '12px 14px',
+    borderRadius: '16px',
+    padding: '16px 18px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
-    width: '240px',
+    gap: '12px',
+    width: '260px',
+  },
+  mixerTitle: {
+    fontSize: '10px',
+    color: colors.textMuted,
+    letterSpacing: '0.12em',
+    textTransform: 'lowercase',
+    margin: 0,
   },
 };
