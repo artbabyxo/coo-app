@@ -14,6 +14,7 @@ export default function PlayerScreen({ playlist, onBack }) {
   const config = PLAYLIST_SOUNDS[playlist] || {};
   const hasHeartbeat = !!config.heartbeat;
   const hasMelody = !!config.melody;
+  const hasSolfeggio = !!config.solfeggio;
   const sessionDuration = config.duration || DEFAULT_DURATION;
   const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
 
@@ -21,6 +22,7 @@ export default function PlayerScreen({ playlist, onBack }) {
   const [droneVol, setDroneVol] = useState(10);
   const [heartbeatVol, setHeartbeatVol] = useState(85);
   const [melodyVol, setMelodyVol] = useState(55);
+  const [solfeggioVol, setSolfeggioVol] = useState(4);
 
   function handleNoiseChange(val) {
     setNoiseVol(val);
@@ -37,6 +39,10 @@ export default function PlayerScreen({ playlist, onBack }) {
   function handleMelodyChange(val) {
     setMelodyVol(val);
     setLayerGain('melody', val / 100);
+  }
+  function handleSolfeggioChange(val) {
+    setSolfeggioVol(val);
+    setLayerGain('solfeggio', val / 100);
   }
 
   useEffect(() => {
@@ -138,6 +144,9 @@ export default function PlayerScreen({ playlist, onBack }) {
           <div style={styles.mixerPanel}>
             {hasMelody && (
               <MixerSlider label="melody" value={melodyVol} onChange={handleMelodyChange} />
+            )}
+            {hasSolfeggio && (
+              <MixerSlider label={`${config.solfeggio} hz tone`} value={solfeggioVol} onChange={handleSolfeggioChange} />
             )}
             <MixerSlider label={noiseName} value={noiseVol} onChange={handleNoiseChange} />
             <MixerSlider label="binaural drone" value={droneVol} onChange={handleDroneChange} />

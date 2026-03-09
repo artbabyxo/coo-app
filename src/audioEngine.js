@@ -18,6 +18,7 @@ let noiseGainNode = null;
 let droneGainNode = null;
 let hbGainNode = null;
 let melodyGainNode = null;
+let solfeggioGainNode = null;
 
 // --- iOS mute switch bypass ---
 // A looping silent HTML audio element forces iOS into media playback mode,
@@ -182,7 +183,7 @@ function startBinauralDrone(ctx, carrier, beat, targetGain) {
 //             Delta 0.5-4 Hz → deep sleep / restoration
 
 export const PLAYLIST_SOUNDS = {
-  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/calm-and-settle.mp3', duration: 147, label: 'Pink noise · Alpha drone · melody' },
+  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/calm-and-settle.mp3', duration: 147, solfeggio: 528, label: 'Pink noise · Alpha drone · melody · 528 Hz' },
   'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 200, beat: 8  }, label: 'Brown noise · Alpha drone' },
   'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, label: 'White noise · Delta drone' },
   'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, label: 'Pink noise · heartbeat · Delta drone' },
@@ -272,6 +273,20 @@ export function startSession(playlistName, volume = 0.38) {
       })
       .catch(() => {}); // silently skip melody if load fails
   }
+
+  // Solfeggio tone layer — pure sine at the target Hz, very soft, sustained
+  solfeggioGainNode = null;
+  if (config.solfeggio) {
+    solfeggioGainNode = audioCtx.createGain();
+    solfeggioGainNode.gain.value = 0.04;
+    solfeggioGainNode.connect(masterGain);
+    const solfeggioOsc = audioCtx.createOscillator();
+    solfeggioOsc.type = 'sine';
+    solfeggioOsc.frequency.value = config.solfeggio;
+    solfeggioOsc.connect(solfeggioGainNode);
+    solfeggioOsc.start();
+    activeNodes.push(solfeggioOsc);
+  }
 }
 
 export function stopSession(fadeDuration = 2) {
@@ -290,6 +305,7 @@ export function stopSession(fadeDuration = 2) {
   droneGainNode = null;
   hbGainNode = null;
   melodyGainNode = null;
+  solfeggioGainNode = null;
 
   const now = audioCtx.currentTime;
   masterGain.gain.cancelScheduledValues(now);
@@ -321,4 +337,5 @@ export function setLayerGain(layer, value) {
   if (layer === 'drone' && droneGainNode) droneGainNode.gain.value = value;
   if (layer === 'heartbeat' && hbGainNode) hbGainNode.gain.value = value;
   if (layer === 'melody' && melodyGainNode) melodyGainNode.gain.value = value;
+  if (layer === 'solfeggio' && solfeggioGainNode) solfeggioGainNode.gain.value = value;
 }
