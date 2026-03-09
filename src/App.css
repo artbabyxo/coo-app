@@ -36,3 +36,17 @@ button {
     opacity: 0;
   }
 }
+
+@keyframes rainbowGlow {
+  0%   { box-shadow: 0 0 10px 3px #ff6b6b; border-color: #ff6b6b; }
+  16%  { box-shadow: 0 0 10px 3px #ffaa44; border-color: #ffaa44; }
+  33%  { box-shadow: 0 0 10px 3px #ffe066; border-color: #ffe066; }
+  50%  { box-shadow: 0 0 10px 3px #44dd99; border-color: #44dd99; }
+  66%  { box-shadow: 0 0 10px 3px #66aaff; border-color: #66aaff; }
+  83%  { box-shadow: 0 0 10px 3px #cc77ff; border-color: #cc77ff; }
+  100% { box-shadow: 0 0 10px 3px #ff6b6b; border-color: #ff6b6b; }
+}
+
+.mixer-rainbow {
+  animation: rainbowGlow 5s linear infinite;
+}

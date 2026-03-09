@@ -135,10 +135,14 @@ export default function PlayerScreen({ playlist, onBack }) {
 
       <p style={styles.volumeNote}>keep volume comfortable · device away from baby</p>
 
-      {/* Mixer panel — bottom right corner */}
+      {/* Mixer panel — top right corner */}
       <div style={styles.mixerWrap}>
-        <button style={styles.mixerToggle} onClick={() => setMixerOpen(o => !o)}>
-          {mixerOpen ? '✕' : 'mixer'}
+        <button
+          className="mixer-rainbow"
+          style={styles.mixerToggle}
+          onClick={() => setMixerOpen(o => !o)}
+        >
+          {mixerOpen ? '✕' : '♪'}
         </button>
         {mixerOpen && (
           <div style={styles.mixerPanel}>
@@ -313,28 +317,32 @@ const styles = {
   },
   mixerWrap: {
     position: 'absolute',
-    bottom: '24px',
+    top: '20px',
     right: '20px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end',
-    gap: '8px',
+    gap: '10px',
   },
   mixerToggle: {
-    background: 'none',
+    width: '44px',
+    height: '44px',
+    borderRadius: '50%',
+    background: 'rgba(255,255,255,0.04)',
     border: `1px solid ${colors.surfaceDeep}`,
-    borderRadius: '12px',
-    padding: '4px 10px',
-    fontSize: '10px',
+    fontSize: '20px',
     color: colors.textMuted,
-    letterSpacing: '0.08em',
     cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   mixerPanel: {
     background: colors.surface,
     border: `1px solid ${colors.surfaceDeep}`,
-    borderRadius: '12px',
-    padding: '12px 14px',
+    borderRadius: '16px',
+    padding: '16px 16px',
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
