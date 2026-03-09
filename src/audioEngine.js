@@ -223,7 +223,7 @@ export function startSession(playlistName, volume = 0.38) {
     makePinkBuffer(audioCtx);
 
   noiseGainNode = audioCtx.createGain();
-  noiseGainNode.gain.value = config.heartbeat ? 0.55 : 1.0;
+  noiseGainNode.gain.value = 0.45;
 
   const noiseSource = audioCtx.createBufferSource();
   noiseSource.buffer = noiseBuf;
@@ -246,7 +246,7 @@ export function startSession(playlistName, volume = 0.38) {
   droneGainNode = null;
   if (config.drone) {
     droneGainNode = audioCtx.createGain();
-    droneGainNode.gain.value = 0.10;
+    droneGainNode.gain.value = 0.45;
     droneGainNode.connect(masterGain);
     const droneNodes = startBinauralDrone(audioCtx, config.drone.carrier, config.drone.beat, droneGainNode);
     activeNodes.push(...droneNodes);
@@ -257,7 +257,7 @@ export function startSession(playlistName, volume = 0.38) {
   if (config.melody) {
     const capturedCtx = audioCtx;
     melodyGainNode = audioCtx.createGain();
-    melodyGainNode.gain.value = 0.55;
+    melodyGainNode.gain.value = 0.45;
     melodyGainNode.connect(masterGain);
     fetch(config.melody)
       .then(r => r.arrayBuffer())
@@ -278,7 +278,7 @@ export function startSession(playlistName, volume = 0.38) {
   solfeggioGainNode = null;
   if (config.solfeggio) {
     solfeggioGainNode = audioCtx.createGain();
-    solfeggioGainNode.gain.value = 0.04;
+    solfeggioGainNode.gain.value = 0.45;
     solfeggioGainNode.connect(masterGain);
     const solfeggioOsc = audioCtx.createOscillator();
     solfeggioOsc.type = 'sine';
