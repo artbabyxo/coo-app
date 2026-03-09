@@ -22,6 +22,7 @@ export default function PlayerScreen({ playlist, onBack }) {
   const [droneVol, setDroneVol] = useState(5);
   const [heartbeatVol, setHeartbeatVol] = useState(45);
   const [melodyVol, setMelodyVol] = useState(50);
+  const [melodyOn, setMelodyOn] = useState(true);
   const [solfeggioVol, setSolfeggioVol] = useState(4);
 
   function handleNoiseChange(val) {
@@ -38,7 +39,12 @@ export default function PlayerScreen({ playlist, onBack }) {
   }
   function handleMelodyChange(val) {
     setMelodyVol(val);
-    setLayerGain('melody', val / 100);
+    if (melodyOn) setLayerGain('melody', val / 100);
+  }
+  function handleMelodyToggle() {
+    const next = !melodyOn;
+    setMelodyOn(next);
+    setLayerGain('melody', next ? melodyVol / 100 : 0);
   }
   function handleSolfeggioChange(val) {
     setSolfeggioVol(val);
@@ -144,6 +150,14 @@ export default function PlayerScreen({ playlist, onBack }) {
         >
           {mixerOpen ? '✕' : '♪'}
         </button>
+        {hasMelody && (
+          <button
+            style={{ ...styles.melodyToggle, ...(melodyOn ? styles.melodyToggleOn : {}) }}
+            onClick={handleMelodyToggle}
+          >
+            {melodyOn ? 'melody on' : 'melody off'}
+          </button>
+        )}
         {mixerOpen && (
           <div style={styles.mixerPanel}>
             {hasMelody && (
@@ -337,6 +351,20 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+  },
+  melodyToggle: {
+    background: 'rgba(255,255,255,0.04)',
+    border: `1px solid ${colors.surfaceDeep}`,
+    borderRadius: '12px',
+    padding: '5px 12px',
+    fontSize: '10px',
+    color: colors.textMuted,
+    letterSpacing: '0.08em',
+    cursor: 'pointer',
+  },
+  melodyToggleOn: {
+    border: `1px solid ${colors.blueMid}`,
+    color: colors.blueMid,
   },
   mixerPanel: {
     background: colors.surface,
