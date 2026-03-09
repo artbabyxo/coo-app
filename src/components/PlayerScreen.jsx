@@ -21,7 +21,7 @@ export default function PlayerScreen({ playlist, onBack }) {
   const [noiseVol, setNoiseVol] = useState(45);
   const [droneVol, setDroneVol] = useState(5);
   const [heartbeatVol, setHeartbeatVol] = useState(45);
-  const [melodyVol, setMelodyVol] = useState(10);
+  const [melodyVol, setMelodyVol] = useState(50);
   const [solfeggioVol, setSolfeggioVol] = useState(4);
 
   function handleNoiseChange(val) {

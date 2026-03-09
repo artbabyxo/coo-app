@@ -257,7 +257,7 @@ export function startSession(playlistName, volume = 0.38) {
   if (config.melody) {
     const capturedCtx = audioCtx;
     melodyGainNode = audioCtx.createGain();
-    melodyGainNode.gain.value = 0.10;
+    melodyGainNode.gain.value = 0.50;
     melodyGainNode.connect(masterGain);
     fetch(config.melody)
       .then(r => r.arrayBuffer())
