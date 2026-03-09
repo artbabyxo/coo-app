@@ -145,7 +145,10 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
   return (
     <div style={styles.container}>
-      <CooLogo height={36} color={colors.textMuted} />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+        <CooLogo height={36} color={colors.textMuted} />
+        <p style={styles.tagline}>a co-regulation companion</p>
+      </div>
 
       {/* Radial layout */}
       <div style={{ position: 'relative', width: CONTAINER, height: CONTAINER, flexShrink: 0 }}>
@@ -377,6 +380,13 @@ const styles = {
     flexDirection: 'column',
     gap: '12px',
     width: '260px',
+  },
+  tagline: {
+    fontSize: '10px',
+    color: colors.surfaceDeep,
+    letterSpacing: '0.12em',
+    fontStyle: 'italic',
+    margin: 0,
   },
   mixerTitle: {
     fontSize: '10px',

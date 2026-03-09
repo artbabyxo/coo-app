@@ -99,7 +99,10 @@ export default function PlayerScreen({ playlist, onBack }) {
     <div style={styles.container}>
       <button style={styles.backBtn} onClick={handleBack}>← back</button>
 
-      <CooLogo height={36} color={colors.textMuted} />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+        <CooLogo height={36} color={colors.textMuted} />
+        <p style={styles.tagline}>a co-regulation companion</p>
+      </div>
       <div style={styles.playlistName}>{playlist}</div>
 
       <div style={styles.orbContainer}>
@@ -248,6 +251,13 @@ const styles = {
     letterSpacing: '0.08em',
     cursor: 'pointer',
     padding: '4px 0',
+  },
+  tagline: {
+    fontSize: '10px',
+    color: colors.surfaceDeep,
+    letterSpacing: '0.12em',
+    fontStyle: 'italic',
+    margin: 0,
   },
   playlistName: {
     fontSize: '15px',
