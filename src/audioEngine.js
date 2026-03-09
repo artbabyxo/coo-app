@@ -246,7 +246,7 @@ export function startSession(playlistName, volume = 0.38) {
   droneGainNode = null;
   if (config.drone) {
     droneGainNode = audioCtx.createGain();
-    droneGainNode.gain.value = 0.10;
+    droneGainNode.gain.value = 0.05;
     droneGainNode.connect(masterGain);
     const droneNodes = startBinauralDrone(audioCtx, config.drone.carrier, config.drone.beat, droneGainNode);
     activeNodes.push(...droneNodes);
