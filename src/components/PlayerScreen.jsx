@@ -3,7 +3,7 @@ import { colors } from '../theme';
 import CooLogo from './CooLogo';
 import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS } from '../audioEngine';
 
-const SESSION_DURATION = 10 * 60; // 10 minutes
+const DEFAULT_DURATION = 10 * 60; // 10 minutes fallback
 
 export default function PlayerScreen({ playlist, onBack }) {
   const [playing, setPlaying] = useState(false);
@@ -13,11 +13,14 @@ export default function PlayerScreen({ playlist, onBack }) {
 
   const config = PLAYLIST_SOUNDS[playlist] || {};
   const hasHeartbeat = !!config.heartbeat;
+  const hasMelody = !!config.melody;
+  const sessionDuration = config.duration || DEFAULT_DURATION;
   const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
 
   const [noiseVol, setNoiseVol] = useState(hasHeartbeat ? 55 : 100);
   const [droneVol, setDroneVol] = useState(10);
   const [heartbeatVol, setHeartbeatVol] = useState(85);
+  const [melodyVol, setMelodyVol] = useState(55);
 
   function handleNoiseChange(val) {
     setNoiseVol(val);
@@ -30,6 +33,10 @@ export default function PlayerScreen({ playlist, onBack }) {
   function handleHeartbeatChange(val) {
     setHeartbeatVol(val);
     setLayerGain('heartbeat', val / 100);
+  }
+  function handleMelodyChange(val) {
+    setMelodyVol(val);
+    setLayerGain('melody', val / 100);
   }
 
   useEffect(() => {
@@ -45,9 +52,9 @@ export default function PlayerScreen({ playlist, onBack }) {
       setPlaying(true);
       intervalRef.current = setInterval(() => {
         setElapsed(e => {
-          if (e + 1 >= SESSION_DURATION) {
+          if (e + 1 >= sessionDuration) {
             handleStop();
-            return SESSION_DURATION;
+            return sessionDuration;
           }
           return e + 1;
         });
@@ -69,7 +76,7 @@ export default function PlayerScreen({ playlist, onBack }) {
     onBack();
   }
 
-  const progress = elapsed / SESSION_DURATION;
+  const progress = elapsed / sessionDuration;
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
   const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
@@ -129,6 +136,9 @@ export default function PlayerScreen({ playlist, onBack }) {
         </button>
         {mixerOpen && (
           <div style={styles.mixerPanel}>
+            {hasMelody && (
+              <MixerSlider label="melody" value={melodyVol} onChange={handleMelodyChange} />
+            )}
             <MixerSlider label={noiseName} value={noiseVol} onChange={handleNoiseChange} />
             <MixerSlider label="binaural drone" value={droneVol} onChange={handleDroneChange} />
             {hasHeartbeat && (

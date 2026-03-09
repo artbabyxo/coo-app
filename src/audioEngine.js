@@ -17,6 +17,7 @@ let nextBeatTime = 0;
 let noiseGainNode = null;
 let droneGainNode = null;
 let hbGainNode = null;
+let melodyGainNode = null;
 
 // --- iOS mute switch bypass ---
 // A looping silent HTML audio element forces iOS into media playback mode,
@@ -181,7 +182,7 @@ function startBinauralDrone(ctx, carrier, beat, targetGain) {
 //             Delta 0.5-4 Hz → deep sleep / restoration
 
 export const PLAYLIST_SOUNDS = {
-  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, label: 'Pink noise · Alpha drone' },
+  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/calm-and-settle.mp3', duration: 147, label: 'Pink noise · Alpha drone · melody' },
   'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 200, beat: 8  }, label: 'Brown noise · Alpha drone' },
   'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, label: 'White noise · Delta drone' },
   'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, label: 'Pink noise · heartbeat · Delta drone' },
@@ -249,6 +250,28 @@ export function startSession(playlistName, volume = 0.38) {
     const droneNodes = startBinauralDrone(audioCtx, config.drone.carrier, config.drone.beat, droneGainNode);
     activeNodes.push(...droneNodes);
   }
+
+  // Melody overlay layer (async — loads MP3 and plays once over the top)
+  melodyGainNode = null;
+  if (config.melody) {
+    const capturedCtx = audioCtx;
+    melodyGainNode = audioCtx.createGain();
+    melodyGainNode.gain.value = 0.55;
+    melodyGainNode.connect(masterGain);
+    fetch(config.melody)
+      .then(r => r.arrayBuffer())
+      .then(buf => capturedCtx.decodeAudioData(buf))
+      .then(decoded => {
+        if (!audioCtx || audioCtx !== capturedCtx) return; // session stopped before melody loaded
+        const melodySource = capturedCtx.createBufferSource();
+        melodySource.buffer = decoded;
+        melodySource.loop = false;
+        melodySource.connect(melodyGainNode);
+        melodySource.start();
+        activeNodes.push(melodySource);
+      })
+      .catch(() => {}); // silently skip melody if load fails
+  }
 }
 
 export function stopSession(fadeDuration = 2) {
@@ -266,6 +289,7 @@ export function stopSession(fadeDuration = 2) {
   noiseGainNode = null;
   droneGainNode = null;
   hbGainNode = null;
+  melodyGainNode = null;
 
   const now = audioCtx.currentTime;
   masterGain.gain.cancelScheduledValues(now);
@@ -296,4 +320,5 @@ export function setLayerGain(layer, value) {
   if (layer === 'noise' && noiseGainNode) noiseGainNode.gain.value = value;
   if (layer === 'drone' && droneGainNode) droneGainNode.gain.value = value;
   if (layer === 'heartbeat' && hbGainNode) hbGainNode.gain.value = value;
+  if (layer === 'melody' && melodyGainNode) melodyGainNode.gain.value = value;
 }
