@@ -37,6 +37,80 @@ button {
   }
 }
 
+/* --- Splash Screen --- */
+
+.splash-container {
+  position: fixed;
+  inset: 0;
+  background: #0d1117;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  z-index: 100;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.splash-exit {
+  animation: splashFadeOut 0.9s ease-in forwards;
+}
+
+.splash-logo {
+  animation: splashLogoIn 1.4s ease-out forwards;
+  opacity: 0;
+}
+
+.splash-line {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: #7aaec8;
+  font-style: italic;
+  opacity: 0;
+  margin: 0;
+  text-align: center;
+}
+
+.splash-line-1 {
+  animation: splashLineIn 0.8s ease-out 1.4s forwards;
+}
+
+.splash-line-2 {
+  animation: splashLineIn 0.8s ease-out 2.1s forwards;
+}
+
+.splash-bloom {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(180, 220, 255, 0.9) 0%, rgba(180, 220, 255, 0) 70%);
+  pointer-events: none;
+  animation: splashBloom 0.9s ease-out forwards;
+}
+
+@keyframes splashLogoIn {
+  0%   { opacity: 0; transform: scale(0.88); filter: drop-shadow(0 0 0px transparent); }
+  60%  { opacity: 1; transform: scale(1.04); filter: drop-shadow(0 0 28px #7aaec8cc); }
+  100% { opacity: 1; transform: scale(1);    filter: drop-shadow(0 0 16px #7aaec888); }
+}
+
+@keyframes splashLineIn {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes splashBloom {
+  0%   { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(8);   opacity: 0; }
+}
+
+@keyframes splashFadeOut {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 @keyframes rainbowGlow {
   0%   { box-shadow: 0 0 10px 3px #ff6b6b; border-color: #ff6b6b; }
   16%  { box-shadow: 0 0 10px 3px #ffaa44; border-color: #ffaa44; }
