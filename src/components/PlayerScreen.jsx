@@ -18,7 +18,7 @@ export default function PlayerScreen({ playlist, onBack }) {
   const sessionDuration = config.duration || DEFAULT_DURATION;
   const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
 
-  const [noiseVol, setNoiseVol] = useState(45);
+  const [noiseVol, setNoiseVol] = useState(20);
   const [droneVol, setDroneVol] = useState(5);
   const [heartbeatVol, setHeartbeatVol] = useState(45);
   const [melodyVol, setMelodyVol] = useState(50);
