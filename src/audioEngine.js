@@ -183,7 +183,7 @@ function startBinauralDrone(ctx, carrier, beat, targetGain) {
 //             Delta 0.5-4 Hz → deep sleep / restoration
 
 export const PLAYLIST_SOUNDS = {
-  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/calm-and-settle.mp3', melodyGain: 0.50, duration: 147, solfeggio: 528, label: 'Pink noise · Alpha drone · melody · 528 Hz' },
+  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/big-feelings.mp3', melodyGain: 0.50, duration: 147, label: 'Pink noise · Alpha drone · melody' },
   'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 200, beat: 8  }, melody: '/audio/big-feelings.mp3', melodyGain: 0.75, duration: 287, solfeggio: 396, label: 'Brown noise · Alpha drone · melody · 396 Hz' },
   'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, label: 'White noise · Delta drone' },
   'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, label: 'Pink noise · heartbeat · Delta drone' },
