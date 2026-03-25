@@ -19,6 +19,7 @@ let droneGainNode = null;
 let hbGainNode = null;
 let melodyGainNode = null;
 let solfeggioGainNode = null;
+let ambientPadGainNode = null;
 
 // --- iOS mute switch bypass ---
 // A looping silent HTML audio element forces iOS into media playback mode,
@@ -141,6 +142,42 @@ function scheduleHeartbeat(ctx, targetGain) {
   }, 25);
 }
 
+// --- Ambient pad crossfade looper ---
+// Overlaps two instances of the buffer with volume envelopes so the loop
+// is inaudible — no click, no gap, no matter what the file's tail sounds like.
+
+function startAmbientPadLoop(ctx, decoded, gainNode) {
+  const duration = decoded.duration;
+  const xfade = 4; // seconds of crossfade overlap
+
+  function play(when) {
+    if (!audioCtx || audioCtx !== ctx) return;
+    const src = ctx.createBufferSource();
+    src.buffer = decoded;
+    const env = ctx.createGain();
+    // Fade in at start, hold, fade out at end
+    env.gain.setValueAtTime(0, when);
+    env.gain.linearRampToValueAtTime(1, when + xfade);
+    env.gain.setValueAtTime(1, when + duration - xfade);
+    env.gain.linearRampToValueAtTime(0, when + duration);
+    src.connect(env);
+    env.connect(gainNode);
+    src.start(when);
+    src.stop(when + duration);
+    activeNodes.push(src);
+  }
+
+  function schedule(when) {
+    if (!audioCtx || audioCtx !== ctx) return;
+    play(when);
+    const nextStart = when + duration - xfade;
+    const delay = Math.max(0, (nextStart - ctx.currentTime - 1) * 1000);
+    setTimeout(() => schedule(nextStart), delay);
+  }
+
+  schedule(ctx.currentTime);
+}
+
 // --- Binaural drone generator ---
 // carrier: base frequency (Hz) — low sine tone, same both ears
 // beat: binaural beat frequency (Hz) — left ear gets carrier, right gets carrier+beat
@@ -183,12 +220,12 @@ function startBinauralDrone(ctx, carrier, beat, targetGain) {
 //             Delta 0.5-4 Hz → deep sleep / restoration
 
 export const PLAYLIST_SOUNDS = {
-  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/big-feelings.mp3', melodyGain: 0.50, duration: 147, label: 'Pink noise · Alpha drone · melody' },
-  'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 200, beat: 8  }, melody: '/audio/big-feelings.mp3', melodyGain: 0.75, duration: 287, solfeggio: 396, label: 'Brown noise · Alpha drone · melody · 396 Hz' },
-  'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, label: 'White noise · Delta drone' },
-  'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, label: 'Pink noise · heartbeat · Delta drone' },
-  'Immune Support':     { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, label: 'Pink noise · Alpha drone' },
-  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 200, beat: 6  }, label: 'Heartbeat · Theta drone' },
+  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/big-feelings.mp3', melodyGain: 0.50, duration: 147, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Pink noise · Alpha drone · melody' },
+  'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 200, beat: 8  }, melody: '/audio/big-feelings.mp3', melodyGain: 0.75, duration: 287, solfeggio: 396, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Brown noise · Alpha drone · melody · 396 Hz' },
+  'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'White noise · Delta drone' },
+  'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Pink noise · heartbeat · Delta drone' },
+  'Immune Support':     { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Pink noise · Alpha drone' },
+  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 200, beat: 6  }, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Heartbeat · Theta drone' },
 };
 
 // --- Public API ---
@@ -274,6 +311,23 @@ export function startSession(playlistName, volume = 0.38) {
       .catch(() => {}); // silently skip melody if load fails
   }
 
+  // Ambient pad layer — looping MP3, warm and continuous, sits beneath everything
+  ambientPadGainNode = null;
+  if (config.ambientPad) {
+    const capturedCtx = audioCtx;
+    ambientPadGainNode = audioCtx.createGain();
+    ambientPadGainNode.gain.value = config.ambientPadGain ?? 0.35;
+    ambientPadGainNode.connect(masterGain);
+    fetch(config.ambientPad)
+      .then(r => r.arrayBuffer())
+      .then(buf => capturedCtx.decodeAudioData(buf))
+      .then(decoded => {
+        if (!audioCtx || audioCtx !== capturedCtx) return;
+        startAmbientPadLoop(capturedCtx, decoded, ambientPadGainNode);
+      })
+      .catch(() => {});
+  }
+
   // Solfeggio tone layer — pure sine at the target Hz, very soft, sustained
   solfeggioGainNode = null;
   if (config.solfeggio) {
@@ -306,6 +360,7 @@ export function stopSession(fadeDuration = 2) {
   hbGainNode = null;
   melodyGainNode = null;
   solfeggioGainNode = null;
+  ambientPadGainNode = null;
 
   const now = audioCtx.currentTime;
   masterGain.gain.cancelScheduledValues(now);
@@ -338,4 +393,5 @@ export function setLayerGain(layer, value) {
   if (layer === 'heartbeat' && hbGainNode) hbGainNode.gain.value = value;
   if (layer === 'melody' && melodyGainNode) melodyGainNode.gain.value = value;
   if (layer === 'solfeggio' && solfeggioGainNode) solfeggioGainNode.gain.value = value;
+  if (layer === 'ambientPad' && ambientPadGainNode) ambientPadGainNode.gain.value = value;
 }
