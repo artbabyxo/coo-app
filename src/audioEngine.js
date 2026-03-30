@@ -225,7 +225,7 @@ export const PLAYLIST_SOUNDS = {
   'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'White noise · Delta drone' },
   'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Pink noise · heartbeat · Delta drone' },
   'Immune Support':     { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Pink noise · Alpha drone' },
-  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 200, beat: 6  }, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Heartbeat · Theta drone' },
+  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 200, beat: 6  }, melody: '/audio/bonding.mp3', melodyGain: 0.50, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Heartbeat · Theta drone · melody' },
 };
 
 // --- Public API ---
