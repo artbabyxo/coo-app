@@ -3,13 +3,12 @@ import { colors } from '../theme';
 import CooLogo from './CooLogo';
 import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS } from '../audioEngine';
 
-const DEFAULT_DURATION = 10 * 60; // 10 minutes fallback
+const DEFAULT_DURATION = 10 * 60;
 
 export default function PlayerScreen({ playlist, onBack }) {
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const intervalRef = useRef(null);
-  const [mixerOpen, setMixerOpen] = useState(false);
 
   const config = PLAYLIST_SOUNDS[playlist] || {};
   const hasHeartbeat = !!config.heartbeat;
@@ -25,37 +24,19 @@ export default function PlayerScreen({ playlist, onBack }) {
   const [melodyOn, setMelodyOn] = useState(true);
   const [solfeggioVol, setSolfeggioVol] = useState(4);
 
-  function handleNoiseChange(val) {
-    setNoiseVol(val);
-    setLayerGain('noise', val / 100);
-  }
-  function handleDroneChange(val) {
-    setDroneVol(val);
-    setLayerGain('drone', val / 100);
-  }
-  function handleHeartbeatChange(val) {
-    setHeartbeatVol(val);
-    setLayerGain('heartbeat', val / 100);
-  }
-  function handleMelodyChange(val) {
-    setMelodyVol(val);
-    if (melodyOn) setLayerGain('melody', val / 100);
-  }
+  function handleNoiseChange(val) { setNoiseVol(val); setLayerGain('noise', val / 100); }
+  function handleDroneChange(val) { setDroneVol(val); setLayerGain('drone', val / 100); }
+  function handleHeartbeatChange(val) { setHeartbeatVol(val); setLayerGain('heartbeat', val / 100); }
+  function handleMelodyChange(val) { setMelodyVol(val); if (melodyOn) setLayerGain('melody', val / 100); }
   function handleMelodyToggle() {
     const next = !melodyOn;
     setMelodyOn(next);
     setLayerGain('melody', next ? melodyVol / 100 : 0);
   }
-  function handleSolfeggioChange(val) {
-    setSolfeggioVol(val);
-    setLayerGain('solfeggio', val / 100);
-  }
+  function handleSolfeggioChange(val) { setSolfeggioVol(val); setLayerGain('solfeggio', val / 100); }
 
   useEffect(() => {
-    return () => {
-      stopSession(0.5);
-      clearInterval(intervalRef.current);
-    };
+    return () => { stopSession(0.5); clearInterval(intervalRef.current); };
   }, []);
 
   function handleToggle() {
@@ -64,10 +45,7 @@ export default function PlayerScreen({ playlist, onBack }) {
       setPlaying(true);
       intervalRef.current = setInterval(() => {
         setElapsed(e => {
-          if (e + 1 >= sessionDuration) {
-            handleStop();
-            return sessionDuration;
-          }
+          if (e + 1 >= sessionDuration) { handleStop(); return sessionDuration; }
           return e + 1;
         });
       }, 1000);
@@ -99,89 +77,86 @@ export default function PlayerScreen({ playlist, onBack }) {
     <div style={styles.container}>
       <button style={styles.backBtn} onClick={handleBack}>← back</button>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-        <CooLogo height={36} color={colors.textMuted} />
-        <p style={styles.tagline}>a co-regulation companion</p>
-      </div>
-      <div style={styles.playlistName}>{playlist}</div>
+      {/* Main content */}
+      <div style={styles.main}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+          <CooLogo height={36} color={colors.textMuted} />
+          <p style={styles.tagline}>a co-regulation companion</p>
+        </div>
+        <div style={styles.playlistName}>{playlist}</div>
 
-      <div style={styles.orbContainer}>
-        {playing && (
-          <>
-            <div style={{ ...styles.ripple, animationDelay: '0s' }} />
-            <div style={{ ...styles.ripple, animationDelay: '1s' }} />
-            <div style={{ ...styles.ripple, animationDelay: '2s' }} />
-          </>
-        )}
-        <svg width="140" height="140" style={styles.progressRing}>
-          <circle cx="70" cy="70" r="54" fill="none" stroke={colors.surfaceDeep} strokeWidth="2" />
-          <circle
-            cx="70" cy="70" r="54"
-            fill="none"
-            stroke={colors.blueMid}
-            strokeWidth="2"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDash}
-            strokeLinecap="round"
-            transform="rotate(-90 70 70)"
-            style={{ transition: 'stroke-dashoffset 1s linear' }}
-          />
-        </svg>
-        <button style={styles.orb} onClick={handleToggle}>
-          <span style={styles.orbLabel}>{playing ? 'pause' : 'play'}</span>
-        </button>
-      </div>
-
-      <div style={styles.timer}>{timeStr}</div>
-
-      <p style={styles.breathCue}>
-        {playing
-          ? "breathe with your baby. you're already doing it."
-          : "press play when you're ready."}
-      </p>
-
-      <div style={styles.soundPill}>{getPlaylistLabel(playlist)}</div>
-
-      <p style={styles.volumeNote}>keep volume comfortable · device away from baby</p>
-
-      {/* Mixer panel — top right corner */}
-      <div style={styles.mixerWrap}>
-        <button
-          className="mixer-rainbow"
-          style={styles.mixerToggle}
-          onClick={() => setMixerOpen(o => !o)}
-        >
-          {mixerOpen ? '✕' : '♪'}
-        </button>
-        {hasMelody && (
-          <button
-            style={{ ...styles.melodyToggle, ...(melodyOn ? styles.melodyToggleOn : {}) }}
-            onClick={handleMelodyToggle}
-          >
-            {melodyOn ? 'melody on' : 'melody off'}
+        <div style={styles.orbContainer}>
+          {playing && (
+            <>
+              <div style={{ ...styles.ripple, animationDelay: '0s' }} />
+              <div style={{ ...styles.ripple, animationDelay: '1s' }} />
+              <div style={{ ...styles.ripple, animationDelay: '2s' }} />
+            </>
+          )}
+          <svg width="140" height="140" style={styles.progressRing}>
+            <circle cx="70" cy="70" r="54" fill="none" stroke={colors.surfaceDeep} strokeWidth="2" />
+            <circle
+              cx="70" cy="70" r="54"
+              fill="none"
+              stroke={colors.blueMid}
+              strokeWidth="2"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDash}
+              strokeLinecap="round"
+              transform="rotate(-90 70 70)"
+              style={{ transition: 'stroke-dashoffset 1s linear' }}
+            />
+          </svg>
+          <button style={styles.orb} onClick={handleToggle}>
+            <span style={styles.orbLabel}>{playing ? 'pause' : 'play'}</span>
           </button>
-        )}
-        {mixerOpen && (
-          <div style={styles.mixerPanel}>
-            {hasMelody && (
-              <MixerSlider label="melody" value={melodyVol} onChange={handleMelodyChange} />
-            )}
-            {hasSolfeggio && (
-              <MixerSlider label={`${config.solfeggio} hz tone`} value={solfeggioVol} onChange={handleSolfeggioChange} />
-            )}
-            <MixerSlider label={noiseName} value={noiseVol} onChange={handleNoiseChange} />
-            <MixerSlider label="binaural drone" value={droneVol} onChange={handleDroneChange} />
-            {hasHeartbeat && (
-              <MixerSlider label="heartbeat" value={heartbeatVol} onChange={handleHeartbeatChange} />
-            )}
-          </div>
-        )}
+        </div>
+
+        <div style={styles.timer}>{timeStr}</div>
+
+        <p style={styles.breathCue}>
+          {playing ? "breathe with your baby. you're already doing it." : "press play when you're ready."}
+        </p>
+
+        <div style={styles.soundPill}>{getPlaylistLabel(playlist)}</div>
+        <p style={styles.volumeNote}>keep volume comfortable · device away from baby</p>
+      </div>
+
+      {/* Sound mixer — always visible at bottom */}
+      <div style={styles.mixer}>
+        <div style={styles.mixerDivider} />
+        <p style={styles.mixerTitle}>sound mix</p>
+        <div style={styles.mixerSliders}>
+          {hasMelody && (
+            <MixerSlider
+              label="melody"
+              value={melodyVol}
+              onChange={handleMelodyChange}
+              extra={
+                <button
+                  style={{ ...styles.melodyToggle, ...(melodyOn ? styles.melodyToggleOn : {}) }}
+                  onClick={handleMelodyToggle}
+                >
+                  {melodyOn ? 'on' : 'off'}
+                </button>
+              }
+            />
+          )}
+          {hasSolfeggio && (
+            <MixerSlider label={`${config.solfeggio} hz`} value={solfeggioVol} onChange={handleSolfeggioChange} />
+          )}
+          <MixerSlider label={noiseName} value={noiseVol} onChange={handleNoiseChange} />
+          <MixerSlider label="drone" value={droneVol} onChange={handleDroneChange} />
+          {hasHeartbeat && (
+            <MixerSlider label="heartbeat" value={heartbeatVol} onChange={handleHeartbeatChange} />
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function MixerSlider({ label, value, onChange }) {
+function MixerSlider({ label, value, onChange, extra }) {
   return (
     <div style={mixerStyles.row}>
       <span style={mixerStyles.label}>{label}</span>
@@ -193,7 +168,10 @@ function MixerSlider({ label, value, onChange }) {
         onChange={e => onChange(Number(e.target.value))}
         style={mixerStyles.slider}
       />
-      <span style={mixerStyles.pct}>{value}%</span>
+      {extra
+        ? <div style={mixerStyles.extraWrap}>{extra}</div>
+        : <span style={mixerStyles.pct}>{value}</span>
+      }
     </div>
   );
 }
@@ -202,14 +180,14 @@ const mixerStyles = {
   row: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: '10px',
     width: '100%',
   },
   label: {
     fontSize: '10px',
     color: colors.textMuted,
     letterSpacing: '0.06em',
-    width: '90px',
+    width: '80px',
     flexShrink: 0,
     textAlign: 'right',
   },
@@ -217,13 +195,19 @@ const mixerStyles = {
     flex: 1,
     accentColor: colors.blueMid,
     cursor: 'pointer',
+    height: '2px',
   },
   pct: {
     fontSize: '10px',
     color: colors.textMuted,
-    width: '28px',
+    width: '24px',
     textAlign: 'right',
     fontVariantNumeric: 'tabular-nums',
+  },
+  extraWrap: {
+    width: '24px',
+    display: 'flex',
+    justifyContent: 'flex-end',
   },
 };
 
@@ -234,9 +218,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: '48px 24px',
-    gap: '24px',
+    padding: '48px 24px 32px',
     boxSizing: 'border-box',
     position: 'relative',
   },
@@ -251,6 +233,15 @@ const styles = {
     letterSpacing: '0.08em',
     cursor: 'pointer',
     padding: '4px 0',
+  },
+  main: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '24px',
+    width: '100%',
   },
   tagline: {
     fontSize: '10px',
@@ -339,51 +330,47 @@ const styles = {
     letterSpacing: '0.08em',
     textAlign: 'center',
   },
-  mixerWrap: {
-    position: 'absolute',
-    top: '20px',
-    right: '20px',
+  // Mixer
+  mixer: {
+    width: '100%',
+    maxWidth: '360px',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: '10px',
-  },
-  mixerToggle: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '50%',
-    background: 'rgba(255,255,255,0.04)',
-    border: `1px solid ${colors.surfaceDeep}`,
-    fontSize: '20px',
-    color: colors.textMuted,
-    cursor: 'pointer',
-    display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+    gap: '12px',
+    paddingTop: '8px',
+  },
+  mixerDivider: {
+    width: '40px',
+    height: '1px',
+    background: colors.surfaceDeep,
+  },
+  mixerTitle: {
+    fontSize: '9px',
+    color: colors.surfaceDeep,
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+    margin: 0,
+  },
+  mixerSliders: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    width: '100%',
   },
   melodyToggle: {
-    background: 'rgba(255,255,255,0.04)',
+    background: 'none',
     border: `1px solid ${colors.surfaceDeep}`,
-    borderRadius: '12px',
-    padding: '5px 12px',
-    fontSize: '10px',
+    borderRadius: '6px',
+    padding: '2px 6px',
+    fontSize: '9px',
     color: colors.textMuted,
     letterSpacing: '0.08em',
     cursor: 'pointer',
+    whiteSpace: 'nowrap',
   },
   melodyToggleOn: {
     border: `1px solid ${colors.blueMid}`,
     color: colors.blueMid,
-  },
-  mixerPanel: {
-    background: colors.surface,
-    border: `1px solid ${colors.surfaceDeep}`,
-    borderRadius: '16px',
-    padding: '16px 16px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    width: '240px',
   },
 };
