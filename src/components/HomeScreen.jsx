@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
-import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS } from '../audioEngine';
+import { startSession, stopSession, getPlaylistLabel } from '../audioEngine';
 
 const WavesIcon = () => (
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
@@ -65,51 +65,10 @@ function orbitPos(index, total) {
   };
 }
 
-function MixerSlider({ label, value, onChange }) {
-  return (
-    <div style={mixerStyles.row}>
-      <span style={mixerStyles.label}>{label}</span>
-      <input
-        type="range" min={0} max={100} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        style={mixerStyles.slider}
-      />
-      <span style={mixerStyles.pct}>{value}%</span>
-    </div>
-  );
-}
-
-const mixerStyles = {
-  row: { display: 'flex', alignItems: 'center', gap: '8px', width: '100%' },
-  label: { fontSize: '10px', color: colors.textMuted, letterSpacing: '0.06em', width: '90px', flexShrink: 0, textAlign: 'right' },
-  slider: { flex: 1, accentColor: colors.blueMid, cursor: 'pointer' },
-  pct: { fontSize: '10px', color: colors.textMuted, width: '28px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
-};
-
 export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [mixerOpen, setMixerOpen] = useState(false);
   const intervalRef = useRef(null);
-
-  const config = PLAYLIST_SOUNDS[selectedPlaylist] || {};
-  const hasHeartbeat = !!config.heartbeat;
-  const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
-
-  const [noiseVol, setNoiseVol] = useState(hasHeartbeat ? 55 : 100);
-  const [droneVol, setDroneVol] = useState(10);
-  const [heartbeatVol, setHeartbeatVol] = useState(100);
-
-  useEffect(() => {
-    return () => { stopSession(0.5); clearInterval(intervalRef.current); };
-  }, []);
-
-  useEffect(() => {
-    const cfg = PLAYLIST_SOUNDS[selectedPlaylist] || {};
-    setNoiseVol(cfg.heartbeat ? 55 : 100);
-    setDroneVol(10);
-    setHeartbeatVol(100);
-  }, [selectedPlaylist]);
 
   function handlePlayPause() {
     if (!playing) {
@@ -219,28 +178,6 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       )}
 
       <p style={styles.volumeNote}>keep volume comfortable · device away from baby</p>
-
-      {/* Mixer */}
-      <div style={styles.mixerWrap}>
-        <button style={{ ...styles.mixerToggle, background: mixerOpen ? colors.blueMid : colors.surface }} onClick={() => setMixerOpen(o => !o)} aria-label="Toggle mixer">
-          {mixerOpen
-            ? <span style={{ fontSize: '14px', color: colors.white, lineHeight: 1 }}>✕</span>
-            : <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-              </svg>
-          }
-        </button>
-        {mixerOpen && (
-          <div style={styles.mixerPanel}>
-            <p style={styles.mixerTitle}>sound mix</p>
-            <MixerSlider label={noiseName} value={noiseVol} onChange={v => { setNoiseVol(v); setLayerGain('noise', v / 100); }} />
-            <MixerSlider label="binaural drone" value={droneVol} onChange={v => { setDroneVol(v); setLayerGain('drone', v / 100); }} />
-            {hasHeartbeat && (
-              <MixerSlider label="heartbeat" value={heartbeatVol} onChange={v => { setHeartbeatVol(v); setLayerGain('heartbeat', v / 100); }} />
-            )}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -282,10 +219,6 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.25s ease',
     padding: 0,
-  },
-  bubbleIcon: {
-    fontSize: '18px',
-    lineHeight: 1,
   },
   bubbleLabel: {
     fontSize: '9px',
@@ -350,49 +283,11 @@ const styles = {
     textAlign: 'center',
     margin: 0,
   },
-  mixerWrap: {
-    position: 'absolute',
-    top: '20px',
-    right: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: '10px',
-  },
-  mixerToggle: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '50%',
-    border: `1px solid ${colors.surfaceDeep}`,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    transition: 'background 0.2s ease',
-    flexShrink: 0,
-  },
-  mixerPanel: {
-    background: colors.surface,
-    border: `1px solid ${colors.surfaceDeep}`,
-    borderRadius: '16px',
-    padding: '16px 18px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    width: '260px',
-  },
   tagline: {
     fontSize: '10px',
     color: colors.surfaceDeep,
     letterSpacing: '0.12em',
     fontStyle: 'italic',
-    margin: 0,
-  },
-  mixerTitle: {
-    fontSize: '10px',
-    color: colors.textMuted,
-    letterSpacing: '0.12em',
-    textTransform: 'lowercase',
     margin: 0,
   },
 };
