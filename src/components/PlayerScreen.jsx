@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
-import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS } from '../audioEngine';
+import { startSession, stopSession, getPlaylistLabel, PLAYLIST_SOUNDS } from '../audioEngine';
 
 const DEFAULT_DURATION = 10 * 60;
 
@@ -11,29 +11,7 @@ export default function PlayerScreen({ playlist, onBack }) {
   const intervalRef = useRef(null);
 
   const config = PLAYLIST_SOUNDS[playlist] || {};
-  const hasHeartbeat = !!config.heartbeat;
-  const hasMelody = !!config.melody;
-  const hasSolfeggio = !!config.solfeggio;
   const sessionDuration = config.duration || DEFAULT_DURATION;
-  const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
-
-  const [noiseVol, setNoiseVol] = useState(20);
-  const [droneVol, setDroneVol] = useState(5);
-  const [heartbeatVol, setHeartbeatVol] = useState(45);
-  const [melodyVol, setMelodyVol] = useState(Math.round((config.melodyGain ?? 0.50) * 100));
-  const [melodyOn, setMelodyOn] = useState(true);
-  const [solfeggioVol, setSolfeggioVol] = useState(4);
-
-  function handleNoiseChange(val) { setNoiseVol(val); setLayerGain('noise', val / 100); }
-  function handleDroneChange(val) { setDroneVol(val); setLayerGain('drone', val / 100); }
-  function handleHeartbeatChange(val) { setHeartbeatVol(val); setLayerGain('heartbeat', val / 100); }
-  function handleMelodyChange(val) { setMelodyVol(val); if (melodyOn) setLayerGain('melody', val / 100); }
-  function handleMelodyToggle() {
-    const next = !melodyOn;
-    setMelodyOn(next);
-    setLayerGain('melody', next ? melodyVol / 100 : 0);
-  }
-  function handleSolfeggioChange(val) { setSolfeggioVol(val); setLayerGain('solfeggio', val / 100); }
 
   useEffect(() => {
     return () => { stopSession(0.5); clearInterval(intervalRef.current); };
@@ -77,7 +55,6 @@ export default function PlayerScreen({ playlist, onBack }) {
     <div style={styles.container}>
       <button style={styles.backBtn} onClick={handleBack}>← back</button>
 
-      {/* Main content */}
       <div style={styles.main}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
           <CooLogo height={36} color={colors.textMuted} />
@@ -121,95 +98,9 @@ export default function PlayerScreen({ playlist, onBack }) {
         <div style={styles.soundPill}>{getPlaylistLabel(playlist)}</div>
         <p style={styles.volumeNote}>keep volume comfortable · device away from baby</p>
       </div>
-
-      {/* Sound mixer — always visible at bottom */}
-      <div style={styles.mixer}>
-        <div style={styles.mixerDivider} />
-        <p style={styles.mixerTitle}>sound mix</p>
-        <div style={styles.mixerSliders}>
-          {hasMelody && (
-            <MixerSlider
-              label="melody"
-              value={melodyVol}
-              onChange={handleMelodyChange}
-              extra={
-                <button
-                  style={{ ...styles.melodyToggle, ...(melodyOn ? styles.melodyToggleOn : {}) }}
-                  onClick={handleMelodyToggle}
-                >
-                  {melodyOn ? 'on' : 'off'}
-                </button>
-              }
-            />
-          )}
-          {hasSolfeggio && (
-            <MixerSlider label={`${config.solfeggio} hz`} value={solfeggioVol} onChange={handleSolfeggioChange} />
-          )}
-          <MixerSlider label={noiseName} value={noiseVol} onChange={handleNoiseChange} />
-          <MixerSlider label="drone" value={droneVol} onChange={handleDroneChange} />
-          {hasHeartbeat && (
-            <MixerSlider label="heartbeat" value={heartbeatVol} onChange={handleHeartbeatChange} />
-          )}
-        </div>
-      </div>
     </div>
   );
 }
-
-function MixerSlider({ label, value, onChange, extra }) {
-  return (
-    <div style={mixerStyles.row}>
-      <span style={mixerStyles.label}>{label}</span>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        style={mixerStyles.slider}
-      />
-      {extra
-        ? <div style={mixerStyles.extraWrap}>{extra}</div>
-        : <span style={mixerStyles.pct}>{value}</span>
-      }
-    </div>
-  );
-}
-
-const mixerStyles = {
-  row: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    width: '100%',
-  },
-  label: {
-    fontSize: '10px',
-    color: colors.textMuted,
-    letterSpacing: '0.06em',
-    width: '80px',
-    flexShrink: 0,
-    textAlign: 'right',
-  },
-  slider: {
-    flex: 1,
-    accentColor: colors.blueMid,
-    cursor: 'pointer',
-    height: '2px',
-  },
-  pct: {
-    fontSize: '10px',
-    color: colors.textMuted,
-    width: '24px',
-    textAlign: 'right',
-    fontVariantNumeric: 'tabular-nums',
-  },
-  extraWrap: {
-    width: '24px',
-    display: 'flex',
-    justifyContent: 'flex-end',
-  },
-};
 
 const styles = {
   container: {
@@ -329,48 +220,5 @@ const styles = {
     color: colors.surfaceDeep,
     letterSpacing: '0.08em',
     textAlign: 'center',
-  },
-  // Mixer
-  mixer: {
-    width: '100%',
-    maxWidth: '360px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '12px',
-    paddingTop: '8px',
-  },
-  mixerDivider: {
-    width: '40px',
-    height: '1px',
-    background: colors.surfaceDeep,
-  },
-  mixerTitle: {
-    fontSize: '9px',
-    color: colors.surfaceDeep,
-    letterSpacing: '0.18em',
-    textTransform: 'uppercase',
-    margin: 0,
-  },
-  mixerSliders: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    width: '100%',
-  },
-  melodyToggle: {
-    background: 'none',
-    border: `1px solid ${colors.surfaceDeep}`,
-    borderRadius: '6px',
-    padding: '2px 6px',
-    fontSize: '9px',
-    color: colors.textMuted,
-    letterSpacing: '0.08em',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-  },
-  melodyToggleOn: {
-    border: `1px solid ${colors.blueMid}`,
-    color: colors.blueMid,
   },
 };
