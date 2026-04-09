@@ -14,7 +14,6 @@ export default function PlayerScreen({ playlist, onBack }) {
   const sessionDuration = config.duration || DEFAULT_DURATION;
   const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
 
-  // Mixer state — default values match audio engine starting gains
   const [noiseVol,      setNoiseVol]      = useState(20);
   const [droneVol,      setDroneVol]      = useState(5);
   const [heartbeatVol,  setHeartbeatVol]  = useState(100);
@@ -100,6 +99,54 @@ export default function PlayerScreen({ playlist, onBack }) {
 
         <div style={styles.timer}>{timeStr}</div>
 
+        {/* Mixer — right below the timer, only visible while playing */}
+        {playing && (
+          <div style={styles.mixer}>
+            <div style={styles.mixerDivider} />
+            <p style={styles.mixerTitle}>sound mix</p>
+            <div style={styles.mixerSliders}>
+              <MixerSlider
+                label={noiseName}
+                value={noiseVol}
+                onChange={v => { setNoiseVol(v); setLayerGain('noise', v / 100); }}
+              />
+              <MixerSlider
+                label="drone"
+                value={droneVol}
+                onChange={v => { setDroneVol(v); setLayerGain('drone', v / 100); }}
+              />
+              {config.heartbeat && (
+                <MixerSlider
+                  label="heartbeat"
+                  value={heartbeatVol}
+                  onChange={v => { setHeartbeatVol(v); setLayerGain('heartbeat', v / 100); }}
+                />
+              )}
+              {config.ambientPad && (
+                <MixerSlider
+                  label="ambient pad"
+                  value={ambientPadVol}
+                  onChange={v => { setAmbientPadVol(v); setLayerGain('ambientPad', v / 100); }}
+                />
+              )}
+              {config.melody && (
+                <MixerSlider
+                  label="melody"
+                  value={melodyVol}
+                  onChange={v => { setMelodyVol(v); setLayerGain('melody', v / 100); }}
+                />
+              )}
+              {config.solfeggio && (
+                <MixerSlider
+                  label={`${config.solfeggio} hz`}
+                  value={solfeggioVol}
+                  onChange={v => { setSolfeggioVol(v); setLayerGain('solfeggio', v / 100); }}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
         <p style={styles.breathCue}>
           {playing ? "breathe with your baby. you're already doing it." : "press play when you're ready."}
         </p>
@@ -107,54 +154,6 @@ export default function PlayerScreen({ playlist, onBack }) {
         <div style={styles.soundPill}>{getPlaylistLabel(playlist)}</div>
         <p style={styles.volumeNote}>keep volume comfortable · device away from baby</p>
       </div>
-
-      {/* Mixer — only visible while playing */}
-      {playing && (
-        <div style={styles.mixer}>
-          <div style={styles.mixerDivider} />
-          <p style={styles.mixerTitle}>sound mix</p>
-          <div style={styles.mixerSliders}>
-            <MixerSlider
-              label={noiseName}
-              value={noiseVol}
-              onChange={v => { setNoiseVol(v); setLayerGain('noise', v / 100); }}
-            />
-            <MixerSlider
-              label="drone"
-              value={droneVol}
-              onChange={v => { setDroneVol(v); setLayerGain('drone', v / 100); }}
-            />
-            {config.heartbeat && (
-              <MixerSlider
-                label="heartbeat"
-                value={heartbeatVol}
-                onChange={v => { setHeartbeatVol(v); setLayerGain('heartbeat', v / 100); }}
-              />
-            )}
-            {config.ambientPad && (
-              <MixerSlider
-                label="ambient pad"
-                value={ambientPadVol}
-                onChange={v => { setAmbientPadVol(v); setLayerGain('ambientPad', v / 100); }}
-              />
-            )}
-            {config.melody && (
-              <MixerSlider
-                label="melody"
-                value={melodyVol}
-                onChange={v => { setMelodyVol(v); setLayerGain('melody', v / 100); }}
-              />
-            )}
-            {config.solfeggio && (
-              <MixerSlider
-                label={`${config.solfeggio} hz`}
-                value={solfeggioVol}
-                onChange={v => { setSolfeggioVol(v); setLayerGain('solfeggio', v / 100); }}
-              />
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -216,6 +215,7 @@ const styles = {
     padding: '48px 24px 32px',
     boxSizing: 'border-box',
     position: 'relative',
+    overflowY: 'auto',
   },
   backBtn: {
     position: 'absolute',
@@ -302,6 +302,31 @@ const styles = {
     fontFamily: 'Georgia, serif',
     fontVariantNumeric: 'tabular-nums',
   },
+  mixer: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  mixerDivider: {
+    width: '40px',
+    height: '1px',
+    background: colors.surfaceDeep,
+  },
+  mixerTitle: {
+    fontSize: '9px',
+    color: colors.surfaceDeep,
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+    margin: 0,
+  },
+  mixerSliders: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    width: '100%',
+  },
   breathCue: {
     fontSize: '13px',
     color: colors.textMuted,
@@ -324,33 +349,5 @@ const styles = {
     color: colors.surfaceDeep,
     letterSpacing: '0.08em',
     textAlign: 'center',
-  },
-  mixer: {
-    width: '100%',
-    maxWidth: '360px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '12px',
-    paddingTop: '8px',
-    paddingBottom: '8px',
-  },
-  mixerDivider: {
-    width: '40px',
-    height: '1px',
-    background: colors.surfaceDeep,
-  },
-  mixerTitle: {
-    fontSize: '9px',
-    color: colors.surfaceDeep,
-    letterSpacing: '0.18em',
-    textTransform: 'uppercase',
-    margin: 0,
-  },
-  mixerSliders: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    width: '100%',
   },
 };
