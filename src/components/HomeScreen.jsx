@@ -188,6 +188,11 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         </button>
       </div>
 
+      {/* Playlist name — shown while playing */}
+      {playing && (
+        <p style={styles.playlistLabel}>{selectedPlaylist.toLowerCase()}</p>
+      )}
+
       {/* Timer */}
       <div style={{ ...styles.timer, opacity: playing ? 1 : 0 }}>{timeStr}</div>
 
@@ -222,7 +227,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
           : 'choose a moment, then press play.'}
       </p>
 
-      {playing && (
+      {!playing && (
         <div style={styles.soundPill}>{getPlaylistLabel(selectedPlaylist)}</div>
       )}
 
@@ -356,6 +361,13 @@ const styles = {
     color: colors.surfaceDeep,
     letterSpacing: '0.08em',
     textAlign: 'center',
+    margin: 0,
+  },
+  playlistLabel: {
+    fontSize: '13px',
+    color: colors.textMuted,
+    letterSpacing: '0.12em',
+    textTransform: 'lowercase',
     margin: 0,
   },
   tagline: {
