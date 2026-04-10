@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
-import { startSession, stopSession, getPlaylistLabel } from '../audioEngine';
+import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS } from '../audioEngine';
 
 const WavesIcon = () => (
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
@@ -65,10 +65,44 @@ function orbitPos(index, total) {
   };
 }
 
+function MixerSlider({ label, value, onChange }) {
+  return (
+    <div style={mixerStyles.row}>
+      <span style={mixerStyles.label}>{label}</span>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        style={mixerStyles.slider}
+      />
+      <span style={mixerStyles.pct}>{value}</span>
+    </div>
+  );
+}
+
+const mixerStyles = {
+  row: { display: 'flex', alignItems: 'center', gap: '10px', width: '100%' },
+  label: { fontSize: '10px', color: colors.textMuted, letterSpacing: '0.06em', width: '80px', flexShrink: 0, textAlign: 'right' },
+  slider: { flex: 1, accentColor: colors.blueMid, cursor: 'pointer', height: '2px' },
+  pct: { fontSize: '10px', color: colors.textMuted, width: '24px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
+};
+
 export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const intervalRef = useRef(null);
+
+  const config = PLAYLIST_SOUNDS[selectedPlaylist] || {};
+  const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
+
+  const [noiseVol,      setNoiseVol]      = useState(20);
+  const [droneVol,      setDroneVol]      = useState(5);
+  const [heartbeatVol,  setHeartbeatVol]  = useState(100);
+  const [melodyVol,     setMelodyVol]     = useState(Math.round((config.melodyGain ?? 0.50) * 100));
+  const [ambientPadVol, setAmbientPadVol] = useState(Math.round((config.ambientPadGain ?? 0.35) * 100));
+  const [solfeggioVol,  setSolfeggioVol]  = useState(4);
 
   function handlePlayPause() {
     if (!playing) {
@@ -111,8 +145,6 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
       {/* Radial layout */}
       <div style={{ position: 'relative', width: CONTAINER, height: CONTAINER, flexShrink: 0 }}>
-
-        {/* Ripples from center */}
         {playing && [0, 1, 2].map(i => (
           <div key={i} style={{
             ...styles.ripple,
@@ -122,7 +154,6 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
           }} />
         ))}
 
-        {/* Orbit bubbles */}
         {PLAYLISTS.map((p, i) => {
           const pos = orbitPos(i, PLAYLISTS.length);
           const selected = selectedPlaylist === p.name;
@@ -149,14 +180,9 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
           );
         })}
 
-        {/* Center play/pause button */}
         <button
           onClick={handlePlayPause}
-          style={{
-            ...styles.centerBtn,
-            left: CENTER - 54,
-            top: CENTER - 54,
-          }}
+          style={{ ...styles.centerBtn, left: CENTER - 54, top: CENTER - 54 }}
         >
           <span style={styles.centerLabel}>{playing ? 'pause' : 'play'}</span>
         </button>
@@ -165,6 +191,30 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       {/* Timer */}
       <div style={{ ...styles.timer, opacity: playing ? 1 : 0 }}>{timeStr}</div>
 
+      {/* Mixer — below the timer, only while playing */}
+      {playing && (
+        <div style={styles.mixer}>
+          <div style={styles.mixerDivider} />
+          <p style={styles.mixerTitle}>sound mix</p>
+          <div style={styles.mixerSliders}>
+            <MixerSlider label={noiseName} value={noiseVol} onChange={v => { setNoiseVol(v); setLayerGain('noise', v / 100); }} />
+            <MixerSlider label="drone" value={droneVol} onChange={v => { setDroneVol(v); setLayerGain('drone', v / 100); }} />
+            {config.heartbeat && (
+              <MixerSlider label="heartbeat" value={heartbeatVol} onChange={v => { setHeartbeatVol(v); setLayerGain('heartbeat', v / 100); }} />
+            )}
+            {config.ambientPad && (
+              <MixerSlider label="ambient pad" value={ambientPadVol} onChange={v => { setAmbientPadVol(v); setLayerGain('ambientPad', v / 100); }} />
+            )}
+            {config.melody && (
+              <MixerSlider label="melody" value={melodyVol} onChange={v => { setMelodyVol(v); setLayerGain('melody', v / 100); }} />
+            )}
+            {config.solfeggio && (
+              <MixerSlider label={`${config.solfeggio} hz`} value={solfeggioVol} onChange={v => { setSolfeggioVol(v); setLayerGain('solfeggio', v / 100); }} />
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Breath cue */}
       <p style={styles.breathCue}>
         {playing
@@ -172,7 +222,6 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
           : 'choose a moment, then press play.'}
       </p>
 
-      {/* Sound label */}
       {playing && (
         <div style={styles.soundPill}>{getPlaylistLabel(selectedPlaylist)}</div>
       )}
@@ -190,10 +239,10 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '32px 16px',
+    padding: '32px 24px 40px',
     gap: '16px',
     boxSizing: 'border-box',
-    position: 'relative',
+    overflowY: 'auto',
   },
   ripple: {
     position: 'absolute',
@@ -257,6 +306,32 @@ const styles = {
     fontVariantNumeric: 'tabular-nums',
     transition: 'opacity 0.4s ease',
     height: '28px',
+  },
+  mixer: {
+    width: '100%',
+    maxWidth: '320px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  mixerDivider: {
+    width: '40px',
+    height: '1px',
+    background: colors.surfaceDeep,
+  },
+  mixerTitle: {
+    fontSize: '9px',
+    color: colors.surfaceDeep,
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+    margin: 0,
+  },
+  mixerSliders: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    width: '100%',
   },
   breathCue: {
     fontSize: '12px',
