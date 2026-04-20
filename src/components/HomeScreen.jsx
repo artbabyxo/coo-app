@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
 import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS } from '../audioEngine';
@@ -93,6 +93,42 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const intervalRef = useRef(null);
+  const wakeLockRef = useRef(null);
+  const playingRef = useRef(false);
+
+  const requestWakeLock = useCallback(async () => {
+    if (!('wakeLock' in navigator)) return;
+    try { wakeLockRef.current = await navigator.wakeLock.request('screen'); } catch (_) {}
+  }, []);
+
+  const releaseWakeLock = useCallback(() => {
+    if (wakeLockRef.current) { wakeLockRef.current.release(); wakeLockRef.current = null; }
+  }, []);
+
+  useEffect(() => {
+    function handleVisibility() {
+      if (document.visibilityState === 'visible' && playingRef.current) requestWakeLock();
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [requestWakeLock]);
+
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    if (playing) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: selectedPlaylist,
+        artist: 'COO',
+        album: 'Co-regulation companion',
+      });
+      navigator.mediaSession.playbackState = 'playing';
+      navigator.mediaSession.setActionHandler('play', () => { /* already playing */ });
+      navigator.mediaSession.setActionHandler('pause', () => handleStop());
+      navigator.mediaSession.setActionHandler('stop', () => handleStop());
+    } else {
+      navigator.mediaSession.playbackState = 'none';
+    }
+  }, [playing, selectedPlaylist]); // eslint-disable-line
 
   const config = PLAYLIST_SOUNDS[selectedPlaylist] || {};
   const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
@@ -108,7 +144,9 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
     if (!playing) {
       startSession(selectedPlaylist);
       setPlaying(true);
+      playingRef.current = true;
       setElapsed(0);
+      requestWakeLock();
       intervalRef.current = setInterval(() => {
         setElapsed(e => {
           if (e + 1 >= SESSION_DURATION) { handleStop(); return SESSION_DURATION; }
@@ -123,8 +161,10 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   function handleStop() {
     stopSession();
     setPlaying(false);
+    playingRef.current = false;
     clearInterval(intervalRef.current);
     setElapsed(0);
+    releaseWakeLock();
   }
 
   function handleSelect(name) {
