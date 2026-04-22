@@ -85,13 +85,24 @@ button {
   width: 280px;
   height: 280px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(136, 173, 120, 0.32) 0%, rgba(136, 173, 120, 0) 70%);
+  background: radial-gradient(circle, rgba(136, 173, 120, 0.35) 0%, rgba(136, 173, 120, 0) 70%);
   pointer-events: none;
-  animation: orbBreath 4s ease-in-out infinite;
+  /* orbBreath plays once over 3.9s, ends at scale(1) opacity(0.85).
+     orbBloom starts at 3.9s from exactly that state — no discontinuity. */
+  animation:
+    orbBreath 3.9s ease-in-out 0s    1 forwards,
+    orbBloom  3.5s ease-in     3.9s  1 forwards;
 }
 
-.splash-orb-exit {
-  animation: splashBloom 3.5s ease-out forwards;
+@keyframes orbBreath {
+  0%   { transform: scale(1);   opacity: 0.8;  }
+  50%  { transform: scale(1.1); opacity: 1;    }
+  100% { transform: scale(1);   opacity: 0.85; }
+}
+
+@keyframes orbBloom {
+  0%   { transform: scale(1);   opacity: 0.85; }
+  100% { transform: scale(14);  opacity: 0;    }
 }
 
 @keyframes splashLogoIn {
@@ -103,21 +114,6 @@ button {
 @keyframes splashLineIn {
   0%   { opacity: 0; transform: translateY(10px); }
   100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes splashBloom {
-  0%   { transform: scale(0.5); opacity: 0.8; }
-  100% { transform: scale(8);   opacity: 0; }
-}
-
-@keyframes orbBreath {
-  0%, 100% { transform: scale(1);    opacity: 0.8; }
-  50%       { transform: scale(1.12); opacity: 1;   }
-}
-
-@keyframes splashBloom {
-  0%   { transform: scale(1);  opacity: 0.9; }
-  100% { transform: scale(14); opacity: 0;   }
 }
 
 @keyframes splashFadeOut {
