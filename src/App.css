@@ -54,7 +54,7 @@ button {
 }
 
 .splash-exit {
-  animation: splashFadeOut 2.2s ease-in forwards;
+  animation: splashFadeOut 3.2s ease-in forwards;
 }
 
 .splash-logo {
@@ -91,7 +91,7 @@ button {
 }
 
 .splash-orb-exit {
-  animation: splashBloom 2.5s ease-out forwards;
+  animation: splashBloom 3.5s ease-out forwards;
 }
 
 @keyframes splashLogoIn {
