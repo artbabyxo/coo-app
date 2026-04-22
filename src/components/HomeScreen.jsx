@@ -213,7 +213,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       {aboutOpen && (
         <div style={styles.aboutOverlay} onClick={() => setAboutOpen(false)}>
           <div style={styles.aboutCard} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexShrink: 0 }}>
               <CooLogo height={32} color={colors.sageDeep} />
               <button
                 onClick={() => setAboutOpen(false)}
@@ -221,26 +221,101 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
               >✕</button>
             </div>
 
-            <p style={styles.aboutSection}>about</p>
-            <p style={styles.aboutBody}>
-              COO is a co-regulation companion for parents and caregivers —
-              grounded in neuroscience and built on the science of how one
-              nervous system soothes another.
-            </p>
+            <div style={styles.aboutScroll}>
+              <p style={styles.aboutSection}>about</p>
+              <p style={styles.aboutBody}>
+                COO is a co-regulation companion for parents and caregivers,
+                grounded in neuroscience and built on the science of how one
+                nervous system soothes another.
+              </p>
 
-            <p style={{ ...styles.aboutSection, marginTop: '20px' }}>dedication</p>
-            <p style={styles.aboutBody}>
-              {/* PLACEHOLDER — Alee will write this */}
-              This app was made with love for the Stark and Falsitta family,
-              and in memory of Rocky Falsitta Jr.
-            </p>
-            <p style={{ ...styles.aboutBody, marginTop: '10px', fontStyle: 'italic' }}>
-              Co-regulation is the science of showing up — of letting your calm
-              become someone else's calm. What began as a gift for a grieving
-              family became something for all of us.
-            </p>
+              <p style={{ ...styles.aboutSection, marginTop: '24px' }}>how it works</p>
+              <p style={styles.aboutBody}>
+                When you're calm, your baby feels it. This is co-regulation - the neurophysiological
+                process by which a caregiver's settled nervous system helps an infant's undeveloped
+                one find equilibrium. Infants are born without the capacity to self-regulate. Their
+                autonomic nervous systems need an external scaffold, a regulated adult in close
+                proximity. Heart rate variability, cortisol levels, and breathing rhythms synchronize
+                between caregiver and child. The vagus nerve, which governs the parasympathetic
+                "rest and digest" response, is still maturing in the first months of life. What you
+                feel, your baby's body is learning to feel.
+              </p>
+              <p style={{ ...styles.aboutBody, marginTop: '14px' }}>
+                COO is built around this science. Each layer is chosen to support your nervous system
+                first, so that support can move outward.
+              </p>
 
-            <p style={styles.aboutFooter}>coo · north star studios · 2025</p>
+              <p style={{ ...styles.aboutSubhead, marginTop: '16px' }}>pink and brown noise</p>
+              <p style={styles.aboutBody}>
+                The womb is not quiet. It registers around 85 decibels, a constant low rumble of
+                blood flow, digestion, and the maternal heartbeat. Pink noise mirrors this spectral
+                shape, energy distributed evenly across octaves the way many biological processes
+                naturally sound. Brown noise goes deeper, heavier in the low frequencies, closest
+                to the original womb environment. Together they mask the unpredictable startles that
+                trigger a newborn's Moro reflex, the involuntary whole-body response to sudden sound
+                or sensation. A predictable sound field tells the nervous system there is nothing to
+                brace against.
+              </p>
+
+              <p style={{ ...styles.aboutSubhead, marginTop: '16px' }}>heartbeat</p>
+              <p style={styles.aboutBody}>
+                Pulsed at 68 bpm, close to a resting maternal heart rate. For a newborn, the
+                heartbeat was the first sound, present for the entire nine months of gestation,
+                steady and constant before they had any other point of reference. The brain learns
+                to associate this rhythm with safety before it learns anything else. Rhythmic
+                auditory stimulation also drives neural entrainment, the brain's documented tendency
+                to synchronize its electrical activity to external rhythms. A known rhythm is a
+                prediction. A prediction is safety.
+              </p>
+
+              <p style={{ ...styles.aboutSubhead, marginTop: '16px' }}>solfeggio frequencies</p>
+              <p style={styles.aboutBody}>
+                An ancient tonal scale, each frequency associated with a specific physiological and
+                emotional state. COO assigns one solfeggio frequency to each playlist, matched to
+                the session's intention: 528 Hz for bonding and cellular repair, 396 Hz for
+                releasing fear and grief, 285 Hz for deep rest and cellular safety, 174 Hz for
+                physical grounding and pain reduction, 639 Hz for connection and attunement, 741 Hz
+                for immune support and clarity. These tones have roots in sacred music traditions
+                and are increasingly the subject of acoustic research into how specific frequencies
+                interact with the body's own vibrational field.
+              </p>
+
+              <p style={{ ...styles.aboutSubhead, marginTop: '16px' }}>binaural tones</p>
+              <p style={styles.aboutBody}>
+                When two slightly different frequencies are played simultaneously, the brain perceives
+                a third frequency equal to the difference between them. This is called a binaural
+                beat, and it drives brainwave activity toward corresponding states: delta waves for
+                deep sleep, theta for drowsy calm, alpha for relaxed alertness. COO calibrates the
+                binaural tones in each playlist to reinforce the intended nervous system state.
+              </p>
+
+              <p style={{ ...styles.aboutSubhead, marginTop: '16px' }}>ambient pad</p>
+              <p style={styles.aboutBody}>
+                A continuous harmonic layer tuned to 432 Hz, a tuning considered by many healing
+                traditions and some acoustic researchers to be more naturally resonant than the
+                modern standard of 440 Hz. It holds the entire soundscape together, giving the
+                nervous system a consistent tonal anchor to rest against rather than fragments of
+                sound to process.
+              </p>
+
+              <p style={{ ...styles.aboutBody, marginTop: '16px', fontStyle: 'italic', color: colors.textMuted }}>
+                The goal is not silence. It's a sound environment that says: you are safe, you are held.
+              </p>
+
+              <p style={{ ...styles.aboutSection, marginTop: '28px' }}>dedication</p>
+              <p style={styles.aboutBody}>
+                {/* PLACEHOLDER — Alee will write this */}
+                This app was made with love for the Stark and Falsitta family,
+                and in memory of Rocky Falsitta Jr.
+              </p>
+              <p style={{ ...styles.aboutBody, marginTop: '10px', fontStyle: 'italic' }}>
+                Co-regulation is the science of showing up, of letting your calm
+                become someone else's calm. What began as a gift for a grieving
+                family became something for all of us.
+              </p>
+
+              <p style={styles.aboutFooter}>coo · north star studios · 2025</p>
+            </div>
           </div>
         </div>
       )}
@@ -396,14 +471,23 @@ const styles = {
     display: 'flex',
     alignItems: 'flex-end',
     justifyContent: 'center',
+    paddingBottom: '24px',
   },
   aboutCard: {
     background: colors.bg,
     width: '100%',
     maxWidth: '480px',
-    borderRadius: '24px 24px 0 0',
-    padding: '28px 28px 48px',
+    borderRadius: '24px',
+    padding: '28px 28px 0',
     boxSizing: 'border-box',
+    maxHeight: '80vh',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  aboutScroll: {
+    overflowY: 'auto',
+    paddingBottom: '36px',
+    WebkitOverflowScrolling: 'touch',
   },
   closeBtn: {
     background: 'none',
@@ -420,6 +504,14 @@ const styles = {
     textTransform: 'uppercase',
     color: colors.sageDeep,
     margin: '0 0 8px 0',
+  },
+  aboutSubhead: {
+    fontSize: '9px',
+    letterSpacing: '0.12em',
+    textTransform: 'lowercase',
+    color: colors.sageMid,
+    margin: '0 0 6px 0',
+    fontStyle: 'italic',
   },
   aboutBody: {
     fontSize: '13px',
