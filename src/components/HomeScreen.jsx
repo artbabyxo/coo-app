@@ -65,6 +65,15 @@ function orbitPos(index, total) {
   };
 }
 
+const ChevronIcon = ({ open }) => (
+  <svg
+    width="12" height="12" viewBox="0 0 12 12"
+    style={{ transition: 'transform 0.3s ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}
+  >
+    <path d="M2 4 L6 8 L10 4" stroke={colors.textMuted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+  </svg>
+);
+
 function MixerSlider({ label, value, onChange }) {
   return (
     <div style={mixerStyles.row}>
@@ -133,6 +142,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const config = PLAYLIST_SOUNDS[selectedPlaylist] || {};
   const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
 
+  const [mixerOpen,     setMixerOpen]     = useState(false);
   const [noiseVol,      setNoiseVol]      = useState(10);
   const [droneVol,      setDroneVol]      = useState(5);
   const [heartbeatVol,  setHeartbeatVol]  = useState(100);
@@ -148,6 +158,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
     setMelodyVol(Math.round((c.melodyGain ?? 0.50) * 100));
     setAmbientPadVol(Math.round((c.ambientPadGain ?? 0.35) * 100));
     setSolfeggioVol(4);
+    setMixerOpen(false);
   }, [selectedPlaylist]);
 
   function handlePlayPause() {
@@ -246,26 +257,39 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       {/* Timer */}
       <div style={{ ...styles.timer, opacity: playing ? 1 : 0 }}>{timeStr}</div>
 
-      {/* Mixer — below the timer, only while playing */}
+      {/* Mixer — collapsible card, only while playing */}
       {playing && (
-        <div style={styles.mixer}>
-          <div style={styles.mixerDivider} />
-          <p style={styles.mixerTitle}>sound mix</p>
-          <div style={styles.mixerSliders}>
-            <MixerSlider label={noiseName} value={noiseVol} onChange={v => { setNoiseVol(v); setLayerGain('noise', v / 100); }} />
-            <MixerSlider label="drone" value={droneVol} onChange={v => { setDroneVol(v); setLayerGain('drone', v / 100); }} />
-            {config.heartbeat && (
-              <MixerSlider label="heartbeat" value={heartbeatVol} onChange={v => { setHeartbeatVol(v); setLayerGain('heartbeat', v / 100); }} />
-            )}
-            {config.ambientPad && (
-              <MixerSlider label="ambient pad" value={ambientPadVol} onChange={v => { setAmbientPadVol(v); setLayerGain('ambientPad', v / 100); }} />
-            )}
-            {config.melody && (
-              <MixerSlider label="melody" value={melodyVol} onChange={v => { setMelodyVol(v); setLayerGain('melody', v / 100); }} />
-            )}
-            {config.solfeggio && (
-              <MixerSlider label={`${config.solfeggio} hz`} value={solfeggioVol} onChange={v => { setSolfeggioVol(v); setLayerGain('solfeggio', v / 100); }} />
-            )}
+        <div style={styles.mixerCard}>
+          <button style={styles.mixerHeader} onClick={() => setMixerOpen(o => !o)}>
+            <div style={{ textAlign: 'left' }}>
+              <p style={styles.mixerTitle}>sound mix</p>
+              {!mixerOpen && (
+                <p style={styles.mixerSublabel}>{config.label}</p>
+              )}
+            </div>
+            <ChevronIcon open={mixerOpen} />
+          </button>
+          <div style={{
+            ...styles.mixerBody,
+            maxHeight: mixerOpen ? '400px' : '0px',
+            opacity: mixerOpen ? 1 : 0,
+          }}>
+            <div style={styles.mixerSliders}>
+              <MixerSlider label={noiseName} value={noiseVol} onChange={v => { setNoiseVol(v); setLayerGain('noise', v / 100); }} />
+              <MixerSlider label="drone" value={droneVol} onChange={v => { setDroneVol(v); setLayerGain('drone', v / 100); }} />
+              {config.heartbeat && (
+                <MixerSlider label="heartbeat" value={heartbeatVol} onChange={v => { setHeartbeatVol(v); setLayerGain('heartbeat', v / 100); }} />
+              )}
+              {config.ambientPad && (
+                <MixerSlider label="ambient pad" value={ambientPadVol} onChange={v => { setAmbientPadVol(v); setLayerGain('ambientPad', v / 100); }} />
+              )}
+              {config.melody && (
+                <MixerSlider label="melody" value={melodyVol} onChange={v => { setMelodyVol(v); setLayerGain('melody', v / 100); }} />
+              )}
+              {config.solfeggio && (
+                <MixerSlider label={`${config.solfeggio} hz`} value={solfeggioVol} onChange={v => { setSolfeggioVol(v); setLayerGain('solfeggio', v / 100); }} />
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -362,18 +386,24 @@ const styles = {
     transition: 'opacity 0.4s ease',
     height: '28px',
   },
-  mixer: {
+  mixerCard: {
     width: '100%',
     maxWidth: '320px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '12px',
+    background: colors.surface,
+    borderRadius: '16px',
+    border: `1px solid ${colors.surfaceDeep}`,
+    overflow: 'hidden',
   },
-  mixerDivider: {
-    width: '40px',
-    height: '1px',
-    background: colors.surfaceDeep,
+  mixerHeader: {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '13px 16px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    gap: '12px',
   },
   mixerTitle: {
     fontSize: '9px',
@@ -382,11 +412,24 @@ const styles = {
     textTransform: 'uppercase',
     margin: 0,
   },
+  mixerSublabel: {
+    fontSize: '9px',
+    color: colors.surfaceDeep,
+    letterSpacing: '0.05em',
+    margin: '3px 0 0 0',
+    fontStyle: 'italic',
+  },
+  mixerBody: {
+    overflow: 'hidden',
+    transition: 'max-height 0.35s ease, opacity 0.2s ease',
+  },
   mixerSliders: {
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
+    padding: '0 16px 16px',
     width: '100%',
+    boxSizing: 'border-box',
   },
   breathCue: {
     fontSize: '12px',
