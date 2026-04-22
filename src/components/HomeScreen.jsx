@@ -85,7 +85,7 @@ function MixerSlider({ label, value, onChange }) {
 const mixerStyles = {
   row: { display: 'flex', alignItems: 'center', gap: '10px', width: '100%' },
   label: { fontSize: '10px', color: colors.textMuted, letterSpacing: '0.06em', width: '80px', flexShrink: 0, textAlign: 'right' },
-  slider: { flex: 1, accentColor: colors.blueMid, cursor: 'pointer', height: '2px' },
+  slider: { flex: 1, accentColor: colors.sageMid, cursor: 'pointer', height: '2px' },
   pct: { fontSize: '10px', color: colors.textMuted, width: '24px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
 };
 
@@ -133,12 +133,22 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const config = PLAYLIST_SOUNDS[selectedPlaylist] || {};
   const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
 
-  const [noiseVol,      setNoiseVol]      = useState(20);
+  const [noiseVol,      setNoiseVol]      = useState(10);
   const [droneVol,      setDroneVol]      = useState(5);
   const [heartbeatVol,  setHeartbeatVol]  = useState(100);
   const [melodyVol,     setMelodyVol]     = useState(Math.round((config.melodyGain ?? 0.50) * 100));
   const [ambientPadVol, setAmbientPadVol] = useState(Math.round((config.ambientPadGain ?? 0.35) * 100));
   const [solfeggioVol,  setSolfeggioVol]  = useState(4);
+
+  useEffect(() => {
+    const c = PLAYLIST_SOUNDS[selectedPlaylist] || {};
+    setNoiseVol(10);
+    setDroneVol(5);
+    setHeartbeatVol(100);
+    setMelodyVol(Math.round((c.melodyGain ?? 0.50) * 100));
+    setAmbientPadVol(Math.round((c.ambientPadGain ?? 0.35) * 100));
+    setSolfeggioVol(4);
+  }, [selectedPlaylist]);
 
   function handlePlayPause() {
     if (!playing) {
@@ -206,10 +216,10 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                 left: CENTER + pos.x - BUBBLE / 2,
                 top: CENTER + pos.y - BUBBLE / 2,
                 background: selected
-                  ? `linear-gradient(145deg, ${colors.blueLight}, ${colors.blueMid})`
+                  ? `linear-gradient(145deg, ${colors.sageLight}, ${colors.sageMid})`
                   : colors.surface,
-                border: `1.5px solid ${selected ? colors.blueMid : 'transparent'}`,
-                boxShadow: selected ? `0 4px 16px ${colors.blueMid}44` : 'none',
+                border: `1.5px solid ${selected ? colors.sageMid : 'transparent'}`,
+                boxShadow: selected ? `0 4px 16px ${colors.sageMid}44` : 'none',
               }}
             >
               <p.Icon />
@@ -294,7 +304,7 @@ const styles = {
     width: '108px',
     height: '108px',
     borderRadius: '50%',
-    border: `1px solid ${colors.blueMid}`,
+    border: `1px solid ${colors.sageMid}`,
     opacity: 0,
     transform: 'translate(-50%, -50%)',
     animation: 'rippleOut 3s ease-out infinite',
@@ -325,13 +335,13 @@ const styles = {
     width: '108px',
     height: '108px',
     borderRadius: '50%',
-    background: `linear-gradient(145deg, ${colors.blueLight}, ${colors.blueMid})`,
+    background: `linear-gradient(145deg, ${colors.sageLight}, ${colors.sageMid})`,
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: `0 8px 32px ${colors.blueMid}55`,
+    boxShadow: `0 8px 32px ${colors.sageMid}55`,
     zIndex: 2,
     transition: 'transform 0.2s ease',
   },
@@ -367,7 +377,7 @@ const styles = {
   },
   mixerTitle: {
     fontSize: '9px',
-    color: colors.surfaceDeep,
+    color: colors.textMuted,
     letterSpacing: '0.18em',
     textTransform: 'uppercase',
     margin: 0,
@@ -398,7 +408,7 @@ const styles = {
   },
   volumeNote: {
     fontSize: '10px',
-    color: colors.surfaceDeep,
+    color: colors.textMuted,
     letterSpacing: '0.08em',
     textAlign: 'center',
     margin: 0,
@@ -412,7 +422,7 @@ const styles = {
   },
   tagline: {
     fontSize: '10px',
-    color: colors.surfaceDeep,
+    color: colors.textMuted,
     letterSpacing: '0.12em',
     fontStyle: 'italic',
     margin: 0,

@@ -253,7 +253,7 @@ export function startSession(playlistName, volume = 0.38) {
     makePinkBuffer(audioCtx);
 
   noiseGainNode = audioCtx.createGain();
-  noiseGainNode.gain.value = 0.20;
+  noiseGainNode.gain.value = 0.10;
 
   const noiseSource = audioCtx.createBufferSource();
   noiseSource.buffer = noiseBuf;
