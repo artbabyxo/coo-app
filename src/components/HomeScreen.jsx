@@ -98,7 +98,16 @@ const mixerStyles = {
   pct: { fontSize: '10px', color: colors.textMuted, width: '24px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
 };
 
+const InfoIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="10" stroke={colors.textMuted} strokeWidth="1.5"/>
+    <path d="M12 11v5" stroke={colors.textMuted} strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="12" cy="8" r="0.5" fill={colors.textMuted} stroke={colors.textMuted} strokeWidth="1"/>
+  </svg>
+);
+
 export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const intervalRef = useRef(null);
@@ -199,6 +208,48 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
   return (
     <div style={styles.container}>
+
+      {/* About overlay */}
+      {aboutOpen && (
+        <div style={styles.aboutOverlay} onClick={() => setAboutOpen(false)}>
+          <div style={styles.aboutCard} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+              <CooLogo height={32} color={colors.sageDeep} />
+              <button
+                onClick={() => setAboutOpen(false)}
+                style={styles.closeBtn}
+              >✕</button>
+            </div>
+
+            <p style={styles.aboutSection}>about</p>
+            <p style={styles.aboutBody}>
+              COO is a co-regulation companion for parents and caregivers —
+              grounded in neuroscience and built on the science of how one
+              nervous system soothes another.
+            </p>
+
+            <p style={{ ...styles.aboutSection, marginTop: '20px' }}>dedication</p>
+            <p style={styles.aboutBody}>
+              {/* PLACEHOLDER — Alee will write this */}
+              This app was made with love for the Stark and Falsitta family,
+              and in memory of Rocky Falsitta Jr.
+            </p>
+            <p style={{ ...styles.aboutBody, marginTop: '10px', fontStyle: 'italic' }}>
+              Co-regulation is the science of showing up — of letting your calm
+              become someone else's calm. What began as a gift for a grieving
+              family became something for all of us.
+            </p>
+
+            <p style={styles.aboutFooter}>coo · north star studios · 2025</p>
+          </div>
+        </div>
+      )}
+
+      {/* Info button — top right */}
+      <button style={styles.infoBtn} onClick={() => setAboutOpen(true)}>
+        <InfoIcon />
+      </button>
+
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
         <CooLogo height={52} color={colors.text} />
         <p style={styles.tagline}>a co-regulation companion</p>
@@ -312,6 +363,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
 const styles = {
   container: {
+    position: 'relative',
     minHeight: '100dvh',
     background: colors.bg,
     display: 'flex',
@@ -322,6 +374,65 @@ const styles = {
     gap: '16px',
     boxSizing: 'border-box',
     overflowY: 'auto',
+  },
+  infoBtn: {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.7,
+  },
+  aboutOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(30, 42, 53, 0.4)',
+    zIndex: 200,
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  aboutCard: {
+    background: colors.bg,
+    width: '100%',
+    maxWidth: '480px',
+    borderRadius: '24px 24px 0 0',
+    padding: '28px 28px 48px',
+    boxSizing: 'border-box',
+  },
+  closeBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '16px',
+    color: colors.textMuted,
+    padding: '4px 8px',
+    lineHeight: 1,
+  },
+  aboutSection: {
+    fontSize: '9px',
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+    color: colors.sageDeep,
+    margin: '0 0 8px 0',
+  },
+  aboutBody: {
+    fontSize: '13px',
+    color: colors.text,
+    lineHeight: 1.7,
+    margin: 0,
+  },
+  aboutFooter: {
+    fontSize: '10px',
+    color: colors.textMuted,
+    letterSpacing: '0.08em',
+    marginTop: '28px',
+    textAlign: 'center',
   },
   ripple: {
     position: 'absolute',
