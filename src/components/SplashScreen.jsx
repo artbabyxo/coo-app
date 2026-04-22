@@ -8,15 +8,20 @@ import CooLogo from './CooLogo';
 // Not implemented yet — show every time for now.
 
 export default function SplashScreen({ onComplete }) {
-  const [exiting, setExiting] = useState(false);
+  const [orbExpanding, setOrbExpanding] = useState(false);
+  const [exiting,      setExiting]      = useState(false);
 
   useEffect(() => {
-    const exitTimer = setTimeout(() => setExiting(true), 7000);
-    const doneTimer = setTimeout(() => onComplete(), 10500);
-    return () => { clearTimeout(exitTimer); clearTimeout(doneTimer); };
+    // tagline 2 fully visible ~2.9s + 1s pause = 3.9s
+    const orbTimer  = setTimeout(() => setOrbExpanding(true), 3900);
+    // fade starts 1.8s into orb expansion
+    const exitTimer = setTimeout(() => setExiting(true),      5700);
+    const doneTimer = setTimeout(() => onComplete(),          9000);
+    return () => { clearTimeout(orbTimer); clearTimeout(exitTimer); clearTimeout(doneTimer); };
   }, [onComplete]);
 
   function handleSkip() {
+    setOrbExpanding(true);
     setExiting(true);
     setTimeout(() => onComplete(), 600);
   }
@@ -26,7 +31,7 @@ export default function SplashScreen({ onComplete }) {
       className={exiting ? 'splash-container splash-exit' : 'splash-container'}
       onClick={handleSkip}
     >
-      <div className={exiting ? 'splash-orb splash-orb-exit' : 'splash-orb'} />
+      <div className={orbExpanding ? 'splash-orb splash-orb-exit' : 'splash-orb'} />
       <div className="splash-logo">
         <CooLogo height={60} color={colors.sageDeep} />
       </div>

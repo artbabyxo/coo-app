@@ -65,7 +65,7 @@ button {
 .splash-line {
   font-size: 11px;
   letter-spacing: 0.14em;
-  color: #7AAD95;
+  color: #88AD78;
   font-style: italic;
   opacity: 0;
   margin: 0;
@@ -85,7 +85,7 @@ button {
   width: 280px;
   height: 280px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(122, 173, 149, 0.32) 0%, rgba(122, 173, 149, 0) 70%);
+  background: radial-gradient(circle, rgba(136, 173, 120, 0.32) 0%, rgba(136, 173, 120, 0) 70%);
   pointer-events: none;
   animation: orbBreath 4s ease-in-out infinite;
 }
@@ -96,8 +96,8 @@ button {
 
 @keyframes splashLogoIn {
   0%   { opacity: 0; transform: scale(0.88); filter: drop-shadow(0 0 0px transparent); }
-  60%  { opacity: 1; transform: scale(1.04); filter: drop-shadow(0 0 28px #7AAD95aa); }
-  100% { opacity: 1; transform: scale(1);    filter: drop-shadow(0 0 16px #7AAD9566); }
+  60%  { opacity: 1; transform: scale(1.04); filter: drop-shadow(0 0 28px #88AD78aa); }
+  100% { opacity: 1; transform: scale(1);    filter: drop-shadow(0 0 16px #88AD7866); }
 }
 
 @keyframes splashLineIn {
