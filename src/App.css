@@ -54,7 +54,7 @@ button {
 }
 
 .splash-exit {
-  animation: splashFadeOut 0.9s ease-in forwards;
+  animation: splashFadeOut 2.2s ease-in forwards;
 }
 
 .splash-logo {
@@ -80,14 +80,18 @@ button {
   animation: splashLineIn 0.8s ease-out 2.1s forwards;
 }
 
-.splash-bloom {
+.splash-orb {
   position: absolute;
-  width: 160px;
-  height: 160px;
+  width: 280px;
+  height: 280px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(122, 173, 149, 0.7) 0%, rgba(122, 173, 149, 0) 70%);
+  background: radial-gradient(circle, rgba(122, 173, 149, 0.32) 0%, rgba(122, 173, 149, 0) 70%);
   pointer-events: none;
-  animation: splashBloom 0.9s ease-out forwards;
+  animation: orbBreath 4s ease-in-out infinite;
+}
+
+.splash-orb-exit {
+  animation: splashBloom 2.5s ease-out forwards;
 }
 
 @keyframes splashLogoIn {
@@ -104,6 +108,16 @@ button {
 @keyframes splashBloom {
   0%   { transform: scale(0.5); opacity: 0.8; }
   100% { transform: scale(8);   opacity: 0; }
+}
+
+@keyframes orbBreath {
+  0%, 100% { transform: scale(1);    opacity: 0.8; }
+  50%       { transform: scale(1.12); opacity: 1;   }
+}
+
+@keyframes splashBloom {
+  0%   { transform: scale(1);  opacity: 0.9; }
+  100% { transform: scale(14); opacity: 0;   }
 }
 
 @keyframes splashFadeOut {

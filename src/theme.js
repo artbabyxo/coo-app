@@ -6,7 +6,7 @@ export const colors = {
   sageMid: '#7AAD95',
   sageDeep: '#4D8F75',
   sand: '#C4A882',
-  text: '#3A4858',
-  textMuted: '#7A8FA0',
+  text: '#1E2A35',
+  textMuted: '#5A7080',
   white: '#FDFAF6',
 };

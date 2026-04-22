@@ -12,7 +12,7 @@ export default function SplashScreen({ onComplete }) {
 
   useEffect(() => {
     const exitTimer = setTimeout(() => setExiting(true), 7000);
-    const doneTimer = setTimeout(() => onComplete(), 7900);
+    const doneTimer = setTimeout(() => onComplete(), 9200);
     return () => { clearTimeout(exitTimer); clearTimeout(doneTimer); };
   }, [onComplete]);
 
@@ -26,12 +26,12 @@ export default function SplashScreen({ onComplete }) {
       className={exiting ? 'splash-container splash-exit' : 'splash-container'}
       onClick={handleSkip}
     >
+      <div className={exiting ? 'splash-orb splash-orb-exit' : 'splash-orb'} />
       <div className="splash-logo">
         <CooLogo height={60} color={colors.sageDeep} />
       </div>
       <p className="splash-line splash-line-1">grounded in neuroscience</p>
       <p className="splash-line splash-line-2">built on the science of co-regulation</p>
-      {exiting && <div className="splash-bloom" />}
     </div>
   );
 }

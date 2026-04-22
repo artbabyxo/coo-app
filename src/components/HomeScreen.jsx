@@ -200,7 +200,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   return (
     <div style={styles.container}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-        <CooLogo height={36} color={colors.textMuted} />
+        <CooLogo height={52} color={colors.text} />
         <p style={styles.tagline}>a co-regulation companion</p>
       </div>
 
@@ -464,9 +464,9 @@ const styles = {
     margin: 0,
   },
   tagline: {
-    fontSize: '10px',
+    fontSize: '13px',
     color: colors.textMuted,
-    letterSpacing: '0.12em',
+    letterSpacing: '0.10em',
     fontStyle: 'italic',
     margin: 0,
   },
