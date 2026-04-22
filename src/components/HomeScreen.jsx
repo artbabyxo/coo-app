@@ -407,14 +407,14 @@ const styles = {
   },
   mixerTitle: {
     fontSize: '9px',
-    color: colors.textMuted,
+    color: colors.text,
     letterSpacing: '0.18em',
     textTransform: 'uppercase',
     margin: 0,
   },
   mixerSublabel: {
     fontSize: '9px',
-    color: colors.surfaceDeep,
+    color: colors.sageDeep,
     letterSpacing: '0.05em',
     margin: '3px 0 0 0',
     fontStyle: 'italic',
