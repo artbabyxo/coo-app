@@ -27,7 +27,7 @@ export default function SplashScreen({ onComplete }) {
       onClick={handleSkip}
     >
       <div className="splash-logo">
-        <CooLogo height={60} color={colors.text} />
+        <CooLogo height={60} color={colors.sageDeep} />
       </div>
       <p className="splash-line splash-line-1">grounded in neuroscience</p>
       <p className="splash-line splash-line-2">built on the science of co-regulation</p>
