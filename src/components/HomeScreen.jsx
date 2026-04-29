@@ -528,6 +528,13 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         </div>
       )}
 
+      {/* Breath cue */}
+      <p style={styles.breathCue}>
+        {playing
+          ? "breathe with your baby. you're already doing it."
+          : 'choose a moment, then press play.'}
+      </p>
+
       {/* Duration picker — shown when not playing */}
       {!playing && (
         <div style={styles.durationRow}>
@@ -561,13 +568,6 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
           })}
         </div>
       )}
-
-      {/* Breath cue */}
-      <p style={styles.breathCue}>
-        {playing
-          ? "breathe with your baby. you're already doing it."
-          : 'choose a moment, then press play.'}
-      </p>
 
       {!playing && (
         <div style={styles.soundPill}>{getPlaylistLabel(selectedPlaylist)}</div>
@@ -907,6 +907,7 @@ const styles = {
     letterSpacing: '0.08em',
     textAlign: 'center',
     margin: 0,
+    marginTop: 'auto',
   },
   playlistLabel: {
     fontSize: '13px',
