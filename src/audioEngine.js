@@ -213,12 +213,12 @@ function startBinauralDrone(ctx, carrier, beat, targetGain) {
 //             Delta 0.5-4 Hz → deep sleep / restoration
 
 export const PLAYLIST_SOUNDS = {
-  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/big-feelings.mp3', melodyGain: 0.50, duration: 147, solfeggio: 528, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.30, noiseGain: 0.06, droneGain: 0.07, solfeggioGain: 0.02, label: 'Pink noise · Alpha drone · 528 Hz · melody' },
-  'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 200, beat: 8  }, melody: '/audio/big-feelings.mp3', melodyGain: 0.75, duration: 287, solfeggio: 396, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Brown noise · Alpha drone · 396 Hz · melody' },
-  'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, solfeggio: 174, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'White noise · Delta drone · 174 Hz' },
-  'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, solfeggio: 285, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Pink noise · heartbeat · Delta drone · 285 Hz' },
-  'Immune Support':     { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, solfeggio: 741, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Pink noise · Alpha drone · 741 Hz' },
-  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 200, beat: 6  }, melody: '/audio/bonding.mp3', melodyGain: 0.50, solfeggio: 639, ambientPad: '/audio/ambient-pad.mp3', ambientPadGain: 0.35, label: 'Heartbeat · Theta drone · 639 Hz · melody' },
+  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/big-feelings.mp3', melodyGain: 0.50, duration: 147, solfeggio: 528, noiseGain: 0.06, droneGain: 0.07, solfeggioGain: 0.02, label: 'Pink noise · Alpha drone · 528 Hz · melody' },
+  'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 200, beat: 8  }, melody: '/audio/big-feelings.mp3', melodyGain: 0.75, duration: 287, solfeggio: 396, label: 'Brown noise · Alpha drone · 396 Hz · melody' },
+  'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, solfeggio: 174, label: 'White noise · Delta drone · 174 Hz' },
+  'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, solfeggio: 285, label: 'Pink noise · heartbeat · Delta drone · 285 Hz' },
+  'Immune Support':     { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, solfeggio: 741, label: 'Pink noise · Alpha drone · 741 Hz' },
+  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 200, beat: 6  }, melody: '/audio/bonding.mp3', melodyGain: 0.50, solfeggio: 639, label: 'Heartbeat · Theta drone · 639 Hz · melody' },
 };
 
 // --- Public API ---
