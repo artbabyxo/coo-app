@@ -152,21 +152,21 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const noiseName = config.noise === 'brown' ? 'brown noise' : config.noise === 'white' ? 'white noise' : 'pink noise';
 
   const [mixerOpen,     setMixerOpen]     = useState(false);
-  const [noiseVol,      setNoiseVol]      = useState(10);
-  const [droneVol,      setDroneVol]      = useState(5);
+  const [noiseVol,      setNoiseVol]      = useState(Math.round((config.noiseGain ?? 0.10) * 100));
+  const [droneVol,      setDroneVol]      = useState(Math.round((config.droneGain ?? 0.05) * 100));
   const [heartbeatVol,  setHeartbeatVol]  = useState(100);
   const [melodyVol,     setMelodyVol]     = useState(Math.round((config.melodyGain ?? 0.50) * 100));
   const [ambientPadVol, setAmbientPadVol] = useState(Math.round((config.ambientPadGain ?? 0.35) * 100));
-  const [solfeggioVol,  setSolfeggioVol]  = useState(4);
+  const [solfeggioVol,  setSolfeggioVol]  = useState(Math.round((config.solfeggioGain ?? 0.04) * 100));
 
   useEffect(() => {
     const c = PLAYLIST_SOUNDS[selectedPlaylist] || {};
-    setNoiseVol(10);
-    setDroneVol(5);
+    setNoiseVol(Math.round((c.noiseGain ?? 0.10) * 100));
+    setDroneVol(Math.round((c.droneGain ?? 0.05) * 100));
     setHeartbeatVol(100);
     setMelodyVol(Math.round((c.melodyGain ?? 0.50) * 100));
     setAmbientPadVol(Math.round((c.ambientPadGain ?? 0.35) * 100));
-    setSolfeggioVol(4);
+    setSolfeggioVol(Math.round((c.solfeggioGain ?? 0.04) * 100));
     setMixerOpen(false);
   }, [selectedPlaylist]);
 
