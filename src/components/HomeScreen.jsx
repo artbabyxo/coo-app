@@ -306,7 +306,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
               <p style={styles.aboutBody}>
                 {/* PLACEHOLDER — Alee will write this */}
                 This app was made with love for the Stark and Falsitta family,
-                and in memory of Rocky Falsitta Jr.
+                and in loving memory of Rocky Falsitta Jr.
               </p>
               <p style={{ ...styles.aboutBody, marginTop: '10px', fontStyle: 'italic' }}>
                 Co-regulation is the science of showing up, of letting your calm
@@ -314,7 +314,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                 family became something for all of us.
               </p>
 
-              <p style={styles.aboutFooter}>coo · north star studios · 2025</p>
+              <p style={styles.aboutFooter}>coo · north star studios · 2026</p>
             </div>
           </div>
         </div>
