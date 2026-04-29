@@ -801,7 +801,6 @@ const styles = {
   durationRow: {
     display: 'flex',
     gap: '8px',
-    marginBottom: '-8px',
   },
   durationPill: {
     borderRadius: '20px',
@@ -873,7 +872,7 @@ const styles = {
     maxWidth: '260px',
     lineHeight: 1.8,
     fontStyle: 'italic',
-    margin: 0,
+    margin: '10px 0',
   },
   soundPill: {
     background: colors.surface,
