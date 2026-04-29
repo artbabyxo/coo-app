@@ -416,9 +416,14 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
             <filter id="orbit-glow" x="-40%" y="-40%" width="180%" height="180%">
               <feGaussianBlur stdDeviation="14" />
             </filter>
+            <radialGradient id="inner-mask" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"   stopColor="#F4F1EC" stopOpacity="1" />
+              <stop offset="82%"  stopColor="#F4F1EC" stopOpacity="1" />
+              <stop offset="100%" stopColor="#F4F1EC" stopOpacity="0" />
+            </radialGradient>
           </defs>
           <circle cx={CENTER} cy={CENTER} r={175} fill="none" stroke="rgba(136,173,120,0.35)" strokeWidth="10" filter="url(#orbit-glow)" />
-          <circle cx={CENTER} cy={CENTER} r={175} fill="#F4F1EC" stroke="none" />
+          <circle cx={CENTER} cy={CENTER} r={175} fill="url(#inner-mask)" stroke="none" />
         </svg>
 
         {playing && [0, 1, 2].map(i => (
@@ -799,7 +804,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: `0 8px 32px ${colors.sageMid}55`,
+    boxShadow: `0 8px 32px ${colors.sageMid}55, 0 0 28px rgba(136,173,120,0.28), 0 0 56px rgba(136,173,120,0.12)`,
     zIndex: 2,
     transition: 'transform 0.2s ease',
   },
