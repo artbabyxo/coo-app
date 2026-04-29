@@ -172,7 +172,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
   function handlePlayPause() {
     if (!playing) {
-      startSession(selectedPlaylist, 0.38, () => handleStop());
+      startSession(selectedPlaylist, 0.38, (fadeDuration) => { stopSession(fadeDuration); setPlaying(false); playingRef.current = false; clearInterval(intervalRef.current); setElapsed(0); releaseWakeLock(); });
       setPlaying(true);
       playingRef.current = true;
       setElapsed(0);

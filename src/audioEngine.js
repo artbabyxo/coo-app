@@ -298,7 +298,7 @@ export function startSession(playlistName, volume = 0.38, onMelodyEnd) {
         melodySource.buffer = decoded;
         melodySource.loop = false;
         melodySource.connect(melodyGainNode);
-        melodySource.onended = () => { if (audioCtx && onMelodyEnd) onMelodyEnd(); };
+        melodySource.onended = () => { if (audioCtx && onMelodyEnd) onMelodyEnd(3); };
         melodySource.start();
         activeNodes.push(melodySource);
       })
