@@ -350,43 +350,28 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
               </p>
               <p style={{ ...styles.aboutSubhead, marginTop: '16px' }}>pink and brown noise</p>
               <p style={styles.aboutBody}>
-                The womb is not quiet. It registers around 85 decibels, a constant low rumble of
-                blood flow, digestion, and the maternal heartbeat. Pink noise mirrors this spectral
-                shape, energy distributed evenly across octaves the way many biological processes
-                naturally sound. Brown noise goes deeper, heavier in the low frequencies, closest
-                to the original womb environment. Together they mask the unpredictable startles that
-                trigger a newborn's Moro reflex, the involuntary whole-body response to sudden sound
-                or sensation. A predictable sound field tells the nervous system there is nothing to
-                brace against.
+                The womb registers around 85 decibels — a constant low rumble of blood flow and heartbeat.
+                Pink and brown noise mirror this spectral shape, masking the sudden sounds that trigger
+                a newborn's startle reflex. A predictable sound field tells the nervous system: nothing to brace against.
               </p>
               <p style={{ ...styles.aboutSubhead, marginTop: '16px' }}>heartbeat</p>
               <p style={styles.aboutBody}>
-                Pulsed at 68 bpm, close to a resting maternal heart rate. For a newborn, the
-                heartbeat was the first sound, present for the entire nine months of gestation,
-                steady and constant before they had any other point of reference. The brain learns
-                to associate this rhythm with safety before it learns anything else. Rhythmic
-                auditory stimulation also drives neural entrainment, the brain's documented tendency
-                to synchronize its electrical activity to external rhythms. A known rhythm is a
-                prediction. A prediction is safety.
+                Pulsed at 68 bpm — a resting maternal heart rate. For a newborn, the heartbeat was
+                the first sound, steady before they had any other point of reference. The brain
+                learns to associate this rhythm with safety before it learns anything else.
               </p>
               <p style={{ ...styles.aboutSubhead, marginTop: '16px' }}>solfeggio frequencies</p>
               <p style={styles.aboutBody}>
-                An ancient tonal scale, each frequency associated with a specific physiological and
-                emotional state. COO assigns one solfeggio frequency to each playlist, matched to
-                the session's intention: 528 Hz for bonding and cellular repair, 396 Hz for
-                releasing fear and grief, 285 Hz for deep rest and cellular safety, 174 Hz for
-                physical grounding and pain reduction, 639 Hz for connection and attunement, 741 Hz
-                for immune support and clarity. These tones have roots in sacred music traditions
-                and are increasingly the subject of acoustic research into how specific frequencies
-                interact with the body's own vibrational field.
+                An ancient tonal scale, each frequency paired with a specific physiological state.
+                COO assigns one solfeggio tone to each playlist: 528 Hz for bonding and repair,
+                396 Hz for releasing fear, 285 Hz for deep rest, 174 Hz for grounding,
+                639 Hz for connection, 741 Hz for immune support.
               </p>
               <p style={{ ...styles.aboutSubhead, marginTop: '16px' }}>binaural tones</p>
               <p style={styles.aboutBody}>
-                When two slightly different frequencies are played simultaneously, the brain perceives
-                a third frequency equal to the difference between them. This is called a binaural
-                beat, and it drives brainwave activity toward corresponding states: delta waves for
-                deep sleep, theta for drowsy calm, alpha for relaxed alertness. COO calibrates the
-                binaural tones in each playlist to reinforce the intended nervous system state.
+                Two slightly different frequencies played simultaneously — the brain perceives a third
+                tone equal to the difference and synchronizes toward that state. Delta for deep sleep,
+                theta for drowsy calm, alpha for relaxed alertness.
               </p>
               <p style={{ ...styles.aboutBody, marginTop: '16px', fontStyle: 'italic', color: colors.textMuted }}>
                 The goal is not silence. It's a sound environment that says: you are safe, you are held.
