@@ -417,8 +417,8 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
               <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
           </defs>
-          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(160,178,155,0.18)" strokeWidth="12" filter="url(#orbit-glow)" />
-          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(160,178,155,0.30)" strokeWidth="1" />
+          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(215,190,140,0.12)" strokeWidth="8" filter="url(#orbit-glow)" />
+          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(215,190,140,0.45)" strokeWidth="0.75" />
         </svg>
 
         {playing && [0, 1, 2].map(i => (
