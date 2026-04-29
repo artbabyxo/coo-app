@@ -587,7 +587,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '64px 24px 40px',
+    padding: '92px 24px 40px',
     gap: '16px',
     boxSizing: 'border-box',
     overflowY: 'auto',
