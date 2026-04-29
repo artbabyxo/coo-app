@@ -456,40 +456,6 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         </button>
       </div>
 
-      {/* Duration picker — shown when not playing */}
-      {!playing && (
-        <div style={styles.durationRow}>
-          {[
-            { label: 'melody', mode: 'melody' },
-            { label: '15 min', mode: 15 },
-            { label: '30 min', mode: 30 },
-          ].map(({ label, mode }) => {
-            const locked   = mode !== 'melody' && !isPremium;
-            const selected = sessionMode === mode;
-            return (
-              <button
-                key={mode}
-                onClick={() => handleDurationSelect(mode)}
-                style={{
-                  ...styles.durationPill,
-                  background:   selected ? colors.sageMid : colors.surface,
-                  color:        selected ? 'white' : colors.textMuted,
-                  border:       `1px solid ${selected ? colors.sageMid : colors.surfaceDeep}`,
-                  opacity:      locked ? 0.6 : 1,
-                  gap:          locked ? '4px' : '0',
-                  display:      'flex',
-                  alignItems:   'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {locked && <NorthStarIcon size={9} color={selected ? 'white' : colors.textMuted} />}
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
       {/* Playlist name — shown while playing */}
       {playing && (
         <p style={styles.playlistLabel}>{selectedPlaylist.toLowerCase()}</p>
@@ -542,6 +508,40 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Duration picker — shown when not playing */}
+      {!playing && (
+        <div style={styles.durationRow}>
+          {[
+            { label: '3 min', mode: 'melody' },
+            { label: '15 min', mode: 15 },
+            { label: '30 min', mode: 30 },
+          ].map(({ label, mode }) => {
+            const locked   = mode !== 'melody' && !isPremium;
+            const selected = sessionMode === mode;
+            return (
+              <button
+                key={mode}
+                onClick={() => handleDurationSelect(mode)}
+                style={{
+                  ...styles.durationPill,
+                  background:   selected ? colors.sageMid : colors.surface,
+                  color:        selected ? 'white' : colors.textMuted,
+                  border:       `1px solid ${selected ? colors.sageMid : colors.surfaceDeep}`,
+                  opacity:      locked ? 0.6 : 1,
+                  gap:          locked ? '4px' : '0',
+                  display:      'flex',
+                  alignItems:   'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {locked && <NorthStarIcon size={9} color={selected ? 'white' : colors.textMuted} />}
+                {label}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -801,10 +801,11 @@ const styles = {
   durationRow: {
     display: 'flex',
     gap: '8px',
+    marginBottom: '-8px',
   },
   durationPill: {
     borderRadius: '20px',
-    padding: '6px 14px',
+    padding: '4px 12px',
     fontSize: '10px',
     letterSpacing: '0.08em',
     cursor: 'pointer',
