@@ -154,7 +154,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const [mixerOpen,     setMixerOpen]     = useState(false);
   const [noiseVol,      setNoiseVol]      = useState(Math.round((config.noiseGain ?? 0.10) * 100));
   const [droneVol,      setDroneVol]      = useState(Math.round((config.droneGain ?? 0.05) * 100));
-  const [heartbeatVol,  setHeartbeatVol]  = useState(100);
+  const [heartbeatVol,  setHeartbeatVol]  = useState(Math.round((config.heartbeatGain ?? 1.0) * 100));
   const [melodyVol,     setMelodyVol]     = useState(Math.round((config.melodyGain ?? 0.50) * 100));
   const [ambientPadVol, setAmbientPadVol] = useState(Math.round((config.ambientPadGain ?? 0.35) * 100));
   const [solfeggioVol,  setSolfeggioVol]  = useState(Math.round((config.solfeggioGain ?? 0.04) * 100));
@@ -163,7 +163,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
     const c = PLAYLIST_SOUNDS[selectedPlaylist] || {};
     setNoiseVol(Math.round((c.noiseGain ?? 0.10) * 100));
     setDroneVol(Math.round((c.droneGain ?? 0.05) * 100));
-    setHeartbeatVol(100);
+    setHeartbeatVol(Math.round((c.heartbeatGain ?? 1.0) * 100));
     setMelodyVol(Math.round((c.melodyGain ?? 0.50) * 100));
     setAmbientPadVol(Math.round((c.ambientPadGain ?? 0.35) * 100));
     setSolfeggioVol(Math.round((c.solfeggioGain ?? 0.04) * 100));
