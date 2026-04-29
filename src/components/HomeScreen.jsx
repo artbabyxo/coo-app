@@ -411,13 +411,13 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       {/* Radial layout */}
       <div style={{ position: 'relative', width: CONTAINER, height: CONTAINER, flexShrink: 0 }}>
         {/* Orbit ring */}
-        <svg style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }} width={CONTAINER} height={CONTAINER}>
+        <svg style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible' }} width={CONTAINER} height={CONTAINER}>
           <defs>
-            <filter id="orbit-glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="3.5" />
+            <filter id="orbit-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2.5" />
             </filter>
           </defs>
-          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(225,195,80,0.65)" strokeWidth="2" filter="url(#orbit-glow)" />
+          <circle cx={CENTER} cy={CENTER} r={175} fill="none" stroke="rgba(225,195,80,0.65)" strokeWidth="2" filter="url(#orbit-glow)" />
         </svg>
 
         {playing && [0, 1, 2].map(i => (
