@@ -402,7 +402,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         <InfoIcon />
       </button>
 
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginTop: '-20px' }}>
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '240px', height: '80px', background: 'radial-gradient(ellipse, rgba(136,173,120,0.25) 0%, transparent 70%)', filter: 'blur(12px)', pointerEvents: 'none' }} />
         <CooLogo height={52} color={colors.text} />
         <p style={styles.tagline}>a co-regulation companion</p>
@@ -417,7 +417,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
               <feGaussianBlur stdDeviation="14" />
             </filter>
           </defs>
-          <circle cx={CENTER} cy={CENTER} r={175} fill="none" stroke="rgba(225,195,80,0.9)" strokeWidth="10" filter="url(#orbit-glow)" />
+          <circle cx={CENTER} cy={CENTER} r={175} fill="none" stroke="rgba(136,173,120,0.35)" strokeWidth="10" filter="url(#orbit-glow)" />
           <circle cx={CENTER} cy={CENTER} r={175} fill="#F4F1EC" stroke="none" />
         </svg>
 
