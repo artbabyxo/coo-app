@@ -412,13 +412,11 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         {/* Orbit ring */}
         <svg style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }} width={CONTAINER} height={CONTAINER}>
           <defs>
-            <filter id="orbit-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            <filter id="orbit-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="7" />
             </filter>
           </defs>
-          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(215,190,140,0.12)" strokeWidth="8" filter="url(#orbit-glow)" />
-          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(215,190,140,0.45)" strokeWidth="0.75" />
+          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(220,190,130,0.65)" strokeWidth="10" filter="url(#orbit-glow)" />
         </svg>
 
         {playing && [0, 1, 2].map(i => (
