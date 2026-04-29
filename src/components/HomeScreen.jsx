@@ -413,10 +413,10 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         <svg style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }} width={CONTAINER} height={CONTAINER}>
           <defs>
             <filter id="orbit-glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="7" />
+              <feGaussianBlur stdDeviation="3.5" />
             </filter>
           </defs>
-          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(220,190,130,0.65)" strokeWidth="10" filter="url(#orbit-glow)" />
+          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(220,190,130,0.6)" strokeWidth="3" filter="url(#orbit-glow)" />
         </svg>
 
         {playing && [0, 1, 2].map(i => (
