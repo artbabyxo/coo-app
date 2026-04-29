@@ -531,7 +531,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       {/* Breath cue */}
       <p style={styles.breathCue}>
         {playing
-          ? "breathe with your baby. you're already doing it."
+          ? "breathe with your baby.\nyou're already doing it."
           : 'choose a moment, then press play.'}
       </p>
 
@@ -587,7 +587,7 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '32px 24px 40px',
+    padding: '64px 24px 40px',
     gap: '16px',
     boxSizing: 'border-box',
     overflowY: 'auto',
@@ -890,6 +890,7 @@ const styles = {
     lineHeight: 1.8,
     fontStyle: 'italic',
     margin: '10px 0',
+    whiteSpace: 'pre-line',
   },
   soundPill: {
     background: colors.surface,
