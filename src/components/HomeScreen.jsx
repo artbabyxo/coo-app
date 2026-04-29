@@ -433,10 +433,14 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                 opacity: locked ? 0.55 : 1,
               }}
             >
-              {locked
-                ? <NorthStarIcon size={16} color={colors.textMuted} />
-                : <p.Icon color={selected ? 'white' : colors.text} />
-              }
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p.Icon color={selected ? 'white' : colors.text} />
+                {locked && (
+                  <span style={{ position: 'absolute', bottom: -4, right: -6, lineHeight: 0 }}>
+                    <NorthStarIcon size={9} color={colors.textMuted} />
+                  </span>
+                )}
+              </div>
               <span style={{ ...styles.bubbleLabel, color: selected ? colors.white : colors.text }}>
                 {p.short}
               </span>
