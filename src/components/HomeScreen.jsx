@@ -409,7 +409,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       </div>
 
       {/* Radial layout */}
-      <div style={{ position: 'relative', width: CONTAINER, height: CONTAINER, flexShrink: 0 }}>
+      <div style={{ position: 'relative', width: CONTAINER, height: CONTAINER, flexShrink: 0, marginTop: '28px' }}>
         {/* Orbit ring */}
         <svg style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible' }} width={CONTAINER} height={CONTAINER}>
           <defs>
