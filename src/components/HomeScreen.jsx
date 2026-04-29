@@ -888,13 +888,13 @@ const styles = {
   },
   soundPill: {
     background: colors.surface,
-    border: `1px solid rgba(225,195,80,0.4)`,
+    border: `1px solid rgba(136,173,120,0.35)`,
     borderRadius: '20px',
     padding: '6px 16px',
     fontSize: '11px',
     color: colors.text,
     letterSpacing: '0.08em',
-    boxShadow: '0 0 16px rgba(225,195,80,0.2)',
+    boxShadow: '0 0 12px rgba(136,173,120,0.15)',
   },
   volumeNote: {
     fontSize: '10px',
