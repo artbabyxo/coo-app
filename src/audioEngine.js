@@ -223,7 +223,7 @@ export const PLAYLIST_SOUNDS = {
 
 // --- Public API ---
 
-export function startSession(playlistName, volume = 0.38) {
+export function startSession(playlistName, volume = 0.38, onMelodyEnd) {
   stopSession(0);
 
   const config = PLAYLIST_SOUNDS[playlistName] || { noise: 'pink', heartbeat: false };
@@ -298,6 +298,7 @@ export function startSession(playlistName, volume = 0.38) {
         melodySource.buffer = decoded;
         melodySource.loop = false;
         melodySource.connect(melodyGainNode);
+        melodySource.onended = () => { if (audioCtx && onMelodyEnd) onMelodyEnd(); };
         melodySource.start();
         activeNodes.push(melodySource);
       })

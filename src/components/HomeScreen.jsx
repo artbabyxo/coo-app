@@ -172,7 +172,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
   function handlePlayPause() {
     if (!playing) {
-      startSession(selectedPlaylist);
+      startSession(selectedPlaylist, 0.38, () => handleStop());
       setPlaying(true);
       playingRef.current = true;
       setElapsed(0);
