@@ -402,7 +402,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         <InfoIcon />
       </button>
 
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginTop: '-20px' }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginTop: '-48px' }}>
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '240px', height: '80px', background: 'radial-gradient(ellipse, rgba(136,173,120,0.25) 0%, transparent 70%)', filter: 'blur(12px)', pointerEvents: 'none' }} />
         <CooLogo height={52} color={colors.text} />
         <p style={styles.tagline}>a co-regulation companion</p>
