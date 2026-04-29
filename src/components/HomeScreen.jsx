@@ -403,7 +403,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       </button>
 
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '240px', height: '80px', background: 'radial-gradient(ellipse, rgba(225,195,80,0.22) 0%, transparent 70%)', filter: 'blur(12px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '240px', height: '80px', background: 'radial-gradient(ellipse, rgba(136,173,120,0.25) 0%, transparent 70%)', filter: 'blur(12px)', pointerEvents: 'none' }} />
         <CooLogo height={52} color={colors.text} />
         <p style={styles.tagline}>a co-regulation companion</p>
       </div>
@@ -413,11 +413,11 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         {/* Orbit ring */}
         <svg style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible' }} width={CONTAINER} height={CONTAINER}>
           <defs>
-            <filter id="orbit-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2.5" />
+            <filter id="orbit-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="7" />
             </filter>
           </defs>
-          <circle cx={CENTER} cy={CENTER} r={175} fill="none" stroke="rgba(225,195,80,0.65)" strokeWidth="2" filter="url(#orbit-glow)" />
+          <circle cx={CENTER} cy={CENTER} r={175} fill="none" stroke="rgba(225,195,80,0.6)" strokeWidth="5" filter="url(#orbit-glow)" />
         </svg>
 
         {playing && [0, 1, 2].map(i => (
