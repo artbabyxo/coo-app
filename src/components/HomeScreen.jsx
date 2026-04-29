@@ -402,7 +402,8 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         <InfoIcon />
       </button>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '240px', height: '80px', background: 'radial-gradient(ellipse, rgba(225,195,80,0.22) 0%, transparent 70%)', filter: 'blur(12px)', pointerEvents: 'none' }} />
         <CooLogo height={52} color={colors.text} />
         <p style={styles.tagline}>a co-regulation companion</p>
       </div>
@@ -416,7 +417,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
               <feGaussianBlur stdDeviation="3.5" />
             </filter>
           </defs>
-          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(220,190,130,0.6)" strokeWidth="2" filter="url(#orbit-glow)" />
+          <circle cx={CENTER} cy={CENTER} r={ORBIT_RADIUS} fill="none" stroke="rgba(225,195,80,0.65)" strokeWidth="2" filter="url(#orbit-glow)" />
         </svg>
 
         {playing && [0, 1, 2].map(i => (
@@ -886,12 +887,13 @@ const styles = {
   },
   soundPill: {
     background: colors.surface,
-    border: `1px solid ${colors.sageMid}`,
+    border: `1px solid rgba(225,195,80,0.4)`,
     borderRadius: '20px',
     padding: '6px 16px',
     fontSize: '11px',
     color: colors.text,
     letterSpacing: '0.08em',
+    boxShadow: '0 0 16px rgba(225,195,80,0.2)',
   },
   volumeNote: {
     fontSize: '10px',
