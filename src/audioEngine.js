@@ -218,7 +218,7 @@ export const PLAYLIST_SOUNDS = {
   'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, melody: '/audio/teething.mp3', melodyGain: 0.70, solfeggio: 174, noiseGain: 0.02, label: 'White noise · Delta drone · 174 Hz · melody' },
   'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, melody: '/audio/sleep.mp3', melodyGain: 0.70, solfeggio: 285, noiseGain: 0.07, droneGain: 0.05, heartbeatGain: 0.64, solfeggioGain: 0.02, label: 'Pink noise · heartbeat · Delta drone · 285 Hz · melody' },
   'Immune Support':     { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/immune.mp3', melodyGain: 0.70, solfeggio: 741, solfeggioGain: 0.02, label: 'Pink noise · Alpha drone · 741 Hz · melody' },
-  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 200, beat: 6  }, melody: '/audio/bonding.mp3', melodyGain: 0.70, solfeggio: 639, label: 'Heartbeat · Theta drone · 639 Hz · melody' },
+  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 200, beat: 6  }, melody: '/audio/bonding.mp3', melodyGain: 0.70, solfeggio: 639, solfeggioGain: 0.03, label: 'Heartbeat · Theta drone · 639 Hz · melody' },
 };
 
 // --- Public API ---
