@@ -30,7 +30,7 @@ export const PLAYLIST_SOUNDS = {
     noise: 'pink', noiseGain: 0.07,
     drone: '/audio/drone-sleep.wav', droneGain: 0.05,
     heartbeat: '/audio/heartbeat.wav', heartbeatGain: 0.64,
-    solfeggio: '/audio/solfeggio-285.wav', solfeggioGain: 0.02,
+    solfeggio: '/audio/solfeggio-285.wav', solfeggioGain: 0.05,
     melody: '/audio/sleep.mp3', melodyGain: 0.80,
     label: 'Pink noise · heartbeat · Delta drone · 285 Hz · melody',
   },
