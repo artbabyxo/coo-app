@@ -1,7 +1,17 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { Purchases } from '@revenuecat/purchases-capacitor';
+import { App } from '@capacitor/app';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
-import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS } from '../audioEngine';
+import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS, resumeContext } from '../audioEngine';
+
+// ─── RevenueCat ───────────────────────────────────────────────────────────────
+// Replace this with the iOS API key from your RevenueCat dashboard
+// (Project → API Keys → Apple App Store → Public app-specific API key)
+const REVENUECAT_API_KEY = 'appl_VVqVfuMcssMCBkMalfEZmOYWgUL';
+const IAP_PRODUCT_ID     = 'com.northstarstudios.coo.premium';
+const IAP_ENTITLEMENT_ID = 'premium';
+// ─────────────────────────────────────────────────────────────────────────────
 
 const PREMIUM_PLAYLISTS = ['Teething & Comfort', 'Sleep Wind-Down'];
 
@@ -117,7 +127,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const [aboutOpen,        setAboutOpen]        = useState(false);
   const [upgradeOpen,      setUpgradeOpen]       = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen]  = useState(false);
-  const [isPremium,        setIsPremium]         = useState(false);
+  const [isPremium,        setIsPremium]         = useState(true); // revert to false before archive
   const [sessionMode,      setSessionMode]       = useState('melody'); // 'melody' | 15 | 30
   const [playing,          setPlaying]           = useState(false);
   const [elapsed,          setElapsed]           = useState(0);
@@ -136,11 +146,48 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
   useEffect(() => {
     function handleVisibility() {
-      if (document.visibilityState === 'visible' && playingRef.current) requestWakeLock();
+      if (document.visibilityState === 'visible' && playingRef.current) {
+        requestWakeLock();
+        resumeContext();
+      }
     }
     document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
+
+    let appListener;
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive && playingRef.current) resumeContext();
+    }).then(l => { appListener = l; });
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      appListener?.remove();
+    };
   }, [requestWakeLock]);
+
+  // ─── IAP: configure RevenueCat + restore entitlement on mount ──────────────
+  useEffect(() => {
+    // Fast path: localStorage lets us avoid a network round-trip on every launch
+    if (localStorage.getItem('coo_premium') === 'true') {
+      setIsPremium(true);
+    }
+
+    async function initRevenueCat() {
+      try {
+        await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+        const { customerInfo } = await Purchases.getCustomerInfo();
+        if (customerInfo.entitlements.active[IAP_ENTITLEMENT_ID]) {
+          setIsPremium(true);
+          localStorage.setItem('coo_premium', 'true');
+        }
+      } catch (err) {
+        // RevenueCat not available in browser/web preview — safe to ignore
+        console.warn('[IAP] RevenueCat init skipped:', err?.message);
+      }
+    }
+
+    initRevenueCat();
+  }, []); // eslint-disable-line
+  // ───────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
@@ -281,15 +328,44 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
             </div>
             <button
               style={styles.purchaseBtn}
-              onClick={() => {
-                // Apple IAP goes here
-                setIsPremium(true);
-                setUpgradeOpen(false);
+              onClick={async () => {
+                try {
+                  const { customerInfo } = await Purchases.purchaseProduct({
+                    productIdentifier: IAP_PRODUCT_ID,
+                  });
+                  if (customerInfo.entitlements.active[IAP_ENTITLEMENT_ID]) {
+                    localStorage.setItem('coo_premium', 'true');
+                    setIsPremium(true);
+                    setUpgradeOpen(false);
+                  }
+                } catch (err) {
+                  // PurchaseCancelledError code 1 = user cancelled — not an error worth surfacing
+                  if (err?.code !== 1) {
+                    console.error('[IAP] Purchase failed:', err?.message);
+                  }
+                  // Stay on upgrade screen; don't crash
+                }
               }}
             >
               unlock · $2.99
             </button>
-            <p style={styles.restoreLink}>restore purchase</p>
+            <p
+              style={{ ...styles.restoreLink, cursor: 'pointer' }}
+              onClick={async () => {
+                try {
+                  const { customerInfo } = await Purchases.restorePurchases();
+                  if (customerInfo.entitlements.active[IAP_ENTITLEMENT_ID]) {
+                    localStorage.setItem('coo_premium', 'true');
+                    setIsPremium(true);
+                    setUpgradeOpen(false);
+                  }
+                } catch (err) {
+                  console.warn('[IAP] Restore failed:', err?.message);
+                }
+              }}
+            >
+              restore purchase
+            </p>
           </div>
         </div>
       )}
@@ -520,7 +596,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                   <MixerSlider label="melody" value={melodyVol} onChange={v => { setMelodyVol(v); setLayerGain('melody', v / 100); }} />
                 )}
                 {config.solfeggio && (
-                  <MixerSlider label={`${config.solfeggio} hz`} value={solfeggioVol} onChange={v => { setSolfeggioVol(v); setLayerGain('solfeggio', v / 100); }} />
+                  <MixerSlider label={`${config.solfeggio.match(/\d+/)?.[0] ?? ''} hz`} value={solfeggioVol} onChange={v => { setSolfeggioVol(v); setLayerGain('solfeggio', v / 100); }} />
                 )}
               </div>
             </div>
@@ -587,14 +663,14 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '92px 24px 40px',
+    padding: 'calc(env(safe-area-inset-top) + 72px) 24px calc(env(safe-area-inset-bottom) + 40px)',
     gap: '16px',
     boxSizing: 'border-box',
     overflowY: 'auto',
   },
   starBtn: {
     position: 'absolute',
-    top: '20px',
+    top: 'calc(env(safe-area-inset-top) + 16px)',
     left: '20px',
     background: 'none',
     border: 'none',
@@ -607,7 +683,7 @@ const styles = {
   },
   infoBtn: {
     position: 'absolute',
-    top: '20px',
+    top: 'calc(env(safe-area-inset-top) + 16px)',
     right: '20px',
     background: 'none',
     border: 'none',

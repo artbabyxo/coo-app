@@ -1,391 +1,413 @@
-// COO Audio Engine
-// Evidence-based sound foundation:
-// - Pink noise (Calm, Sleep, Immune Support) — strongest adult calming evidence
-// - Brown noise (Big Feelings) — deepest, most enveloping
-// - White noise (Teething) — most researched for infants, womb-like
-// - Heartbeat (Bonding, Sleep Wind-Down) — maternal heartbeat ~68 bpm, neural entrainment research
-// - Binaural drone (all playlists) — sustained carrier tone + binaural beat tuned to each playlist's intention
-//   Binaural beats require headphones for full effect; still pleasant as dual-tone drone without them
+import { Capacitor } from '@capacitor/core';
+import { NativeAudio } from '@capacitor-community/native-audio';
+
+const IS_NATIVE = Capacitor.isNativePlatform();
+const MASTER_SCALE = 0.38;
+
+export const PLAYLIST_SOUNDS = {
+  'Calm & Settle': {
+    noise: 'pink', noiseGain: 0.06,
+    drone: '/audio/drone-calm.wav', droneGain: 0.07,
+    solfeggio: '/audio/solfeggio-528.wav', solfeggioGain: 0.015,
+    melody: '/audio/calmsettle.mp3', melodyGain: 0.70,
+    label: 'Pink noise · Alpha drone · 528 Hz · melody',
+  },
+  'Big Feelings': {
+    noise: 'brown', noiseGain: 0.10,
+    drone: '/audio/drone-bigfeelings.wav', droneGain: 0.05,
+    solfeggio: '/audio/solfeggio-396.wav', solfeggioGain: 0.02,
+    melody: '/audio/bigfeelings.mp3', melodyGain: 0.70,
+    label: 'Brown noise · Alpha drone · 396 Hz · melody',
+  },
+  'Teething & Comfort': {
+    noise: 'white', noiseGain: 0.02,
+    drone: '/audio/drone-teething.wav', droneGain: 0.05,
+    solfeggio: '/audio/solfeggio-174.wav', solfeggioGain: 0.02,
+    melody: '/audio/teething.mp3', melodyGain: 0.70,
+    label: 'White noise · Delta drone · 174 Hz · melody',
+  },
+  'Sleep Wind-Down': {
+    noise: 'pink', noiseGain: 0.07,
+    drone: '/audio/drone-sleep.wav', droneGain: 0.05,
+    heartbeat: '/audio/heartbeat.wav', heartbeatGain: 0.64,
+    solfeggio: '/audio/solfeggio-285.wav', solfeggioGain: 0.02,
+    melody: '/audio/sleep.mp3', melodyGain: 0.70,
+    label: 'Pink noise · heartbeat · Delta drone · 285 Hz · melody',
+  },
+  'Immune Support': {
+    noise: 'pink', noiseGain: 0.06,
+    drone: '/audio/drone-calm.wav', droneGain: 0.07,
+    solfeggio: '/audio/solfeggio-741.wav', solfeggioGain: 0.02,
+    melody: '/audio/immune.mp3', melodyGain: 0.70,
+    label: 'Pink noise · Alpha drone · 741 Hz · melody',
+  },
+  'Bonding': {
+    noise: 'pink', noiseGain: 0.06,
+    drone: '/audio/drone-bonding.wav', droneGain: 0.05,
+    heartbeat: '/audio/heartbeat.wav', heartbeatGain: 0.64,
+    solfeggio: '/audio/solfeggio-639.wav', solfeggioGain: 0.03,
+    melody: '/audio/bonding.mp3', melodyGain: 0.70,
+    label: 'Heartbeat · Theta drone · 639 Hz · melody',
+  },
+};
+
+// ─── NATIVE PATH ──────────────────────────────────────────────────────────────
+
+const LAYER_IDS = {
+  noise:     'coo-noise',
+  drone:     'coo-drone',
+  solfeggio: 'coo-solfeggio',
+  heartbeat: 'coo-heartbeat',
+  melody:    'coo-melody',
+};
+
+// /audio/file.wav → public/audio/file.wav (Capacitor bundle path)
+function toBundlePath(src) {
+  return `public${src.startsWith('/') ? src : '/' + src}`;
+}
+
+let nativeSessionId = 0;
+let nativeActiveIds = new Set();
+let nativeCurrentVols = {};
+let nativeFadeTimers = {};
+let nativeMelodyListener = null;
+
+async function nativeUnloadAll() {
+  const ids = [...nativeActiveIds];
+  nativeActiveIds.clear();
+  nativeCurrentVols = {};
+  Object.values(nativeFadeTimers).forEach(t => clearInterval(t));
+  nativeFadeTimers = {};
+  for (const assetId of ids) {
+    await NativeAudio.stop({ assetId }).catch(() => {});
+    await NativeAudio.unload({ assetId }).catch(() => {});
+  }
+}
+
+function nativeFade(assetId, toVol, durationMs, onDone) {
+  if (nativeFadeTimers[assetId]) clearInterval(nativeFadeTimers[assetId]);
+  const from = nativeCurrentVols[assetId] ?? 0;
+  const steps = Math.max(1, Math.round(durationMs / 80));
+  const intervalMs = durationMs / steps;
+  let step = 0;
+  nativeFadeTimers[assetId] = setInterval(() => {
+    step++;
+    const vol = Math.min(1, Math.max(0, from + (toVol - from) * (step / steps)));
+    NativeAudio.setVolume({ assetId, volume: vol }).catch(() => {});
+    nativeCurrentVols[assetId] = vol;
+    if (step >= steps) {
+      clearInterval(nativeFadeTimers[assetId]);
+      delete nativeFadeTimers[assetId];
+      if (onDone) onDone();
+    }
+  }, intervalMs);
+}
+
+async function nativeLoad(assetId, src, targetVol, loop) {
+  try {
+    await NativeAudio.preload({
+      assetId,
+      assetPath: toBundlePath(src),
+      volume: 0,
+      audioChannelNum: 1,
+      isLooping: loop,
+    });
+    nativeActiveIds.add(assetId);
+    nativeCurrentVols[assetId] = 0;
+    await NativeAudio.play({ assetId });
+    nativeFade(assetId, targetVol, 2500);
+  } catch (e) {
+    console.warn(`[NativeAudio] load failed: ${assetId}`, e);
+  }
+}
+
+async function nativeStart(playlistName, onMelodyEnd, loopMelody) {
+  const thisId = ++nativeSessionId;
+
+  if (nativeMelodyListener) {
+    nativeMelodyListener.remove();
+    nativeMelodyListener = null;
+  }
+
+  await nativeUnloadAll();
+
+  const config = PLAYLIST_SOUNDS[playlistName] || {};
+
+  if (!loopMelody && onMelodyEnd) {
+    NativeAudio.addListener('complete', ({ assetId }) => {
+      if (assetId === LAYER_IDS.melody && nativeSessionId === thisId) {
+        onMelodyEnd(3);
+      }
+    }).then(l => { nativeMelodyListener = l; });
+  }
+
+  const noiseType = config.noise || 'pink';
+  await nativeLoad(
+    LAYER_IDS.noise,
+    `/audio/${noiseType}-noise.wav`,
+    Math.min(1, (config.noiseGain ?? 0.10) * MASTER_SCALE),
+    true,
+  );
+
+  if (config.drone) {
+    await nativeLoad(
+      LAYER_IDS.drone,
+      config.drone,
+      Math.min(1, (config.droneGain ?? 0.05) * MASTER_SCALE),
+      true,
+    );
+  }
+
+  if (config.solfeggio) {
+    await nativeLoad(
+      LAYER_IDS.solfeggio,
+      config.solfeggio,
+      Math.min(1, (config.solfeggioGain ?? 0.02) * MASTER_SCALE),
+      true,
+    );
+  }
+
+  if (config.heartbeat) {
+    await nativeLoad(
+      LAYER_IDS.heartbeat,
+      config.heartbeat,
+      Math.min(1, (config.heartbeatGain ?? 0.64) * MASTER_SCALE),
+      true,
+    );
+  }
+
+  if (config.melody) {
+    await nativeLoad(
+      LAYER_IDS.melody,
+      config.melody,
+      Math.min(1, (config.melodyGain ?? 0.70) * MASTER_SCALE),
+      loopMelody,
+    );
+  }
+}
+
+async function nativeStop(fadeDuration = 2) {
+  const ids = [...nativeActiveIds];
+
+  if (fadeDuration <= 0) {
+    await nativeUnloadAll();
+    return;
+  }
+
+  // Fade out all active layers, then unload
+  let pending = ids.length;
+  if (pending === 0) return;
+
+  const done = async () => {
+    pending--;
+    if (pending === 0) {
+      for (const assetId of ids) {
+        await NativeAudio.stop({ assetId }).catch(() => {});
+        await NativeAudio.unload({ assetId }).catch(() => {});
+      }
+      nativeActiveIds.clear();
+      nativeCurrentVols = {};
+    }
+  };
+
+  ids.forEach(assetId => {
+    nativeFade(assetId, 0, fadeDuration * 1000, done);
+  });
+}
+
+function nativeSetLayerGain(layer, value) {
+  const assetId = LAYER_IDS[layer];
+  if (!assetId || !nativeActiveIds.has(assetId)) return;
+  const vol = Math.min(1, value * MASTER_SCALE);
+  if (nativeFadeTimers[assetId]) clearInterval(nativeFadeTimers[assetId]);
+  NativeAudio.setVolume({ assetId, volume: vol }).catch(() => {});
+  nativeCurrentVols[assetId] = vol;
+}
+
+// ─── WEB PATH ─────────────────────────────────────────────────────────────────
 
 let audioCtx = null;
-let masterGain = null;
-let activeNodes = [];
-let schedulerInterval = null;
-let nextBeatTime = 0;
-
-// Live gain node refs — updated by setLayerGain()
-let noiseGainNode = null;
-let droneGainNode = null;
-let hbGainNode = null;
-let melodyGainNode = null;
-let solfeggioGainNode = null;
-let ambientPadGainNode = null;
-
-// --- iOS mute switch bypass ---
-// A looping silent MP3 served from the server forces iOS into media playback
-// mode, bypassing the hardware silent switch. Blob/data-URI WAVs are too short
-// for iOS to register as a real playback session.
 let silentAudio = null;
+let keepAliveStarted = false;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (!keepAliveStarted && audioCtx.state !== 'closed') {
+    keepAliveStarted = true;
+    const buf = audioCtx.createBuffer(1, Math.ceil(audioCtx.sampleRate * 0.5), audioCtx.sampleRate);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    src.connect(audioCtx.destination);
+    src.start();
+  }
+  return audioCtx;
+}
+
+window.__cooKeepAudioAlive = () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+};
 
 function getSilentAudio() {
-  if (silentAudio) return silentAudio;
-  silentAudio = new Audio('/audio/silent.mp3');
-  silentAudio.loop = true;
+  if (!silentAudio) {
+    silentAudio = new Audio('/audio/silent.mp3');
+    silentAudio.loop = true;
+  }
   return silentAudio;
 }
 
-// --- Noise buffer generators ---
-
-function makeWhiteBuffer(ctx) {
-  const len = ctx.sampleRate * 4;
-  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-  for (let c = 0; c < 2; c++) {
-    const data = buf.getChannelData(c);
-    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+const noiseCache = {};
+function getNoiseEntry(type) {
+  if (!noiseCache[type]) {
+    const ctx = getAudioCtx();
+    const el = new Audio(`/audio/${type}-noise.wav`);
+    el.loop = true;
+    const srcNode = ctx.createMediaElementSource(el);
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 0;
+    srcNode.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    noiseCache[type] = { el, gainNode };
   }
-  return buf;
+  return noiseCache[type];
 }
 
-function makePinkBuffer(ctx) {
-  // Paul Kellet's IIR filter approximation — -3dB/octave spectral rolloff
-  const len = ctx.sampleRate * 4;
-  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-  for (let c = 0; c < 2; c++) {
-    const data = buf.getChannelData(c);
-    let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
-    for (let i = 0; i < len; i++) {
-      const w = Math.random() * 2 - 1;
-      b0 = 0.99886*b0 + w*0.0555179;
-      b1 = 0.99332*b1 + w*0.0750759;
-      b2 = 0.96900*b2 + w*0.1538520;
-      b3 = 0.86650*b3 + w*0.3104856;
-      b4 = 0.55000*b4 + w*0.5329522;
-      b5 = -0.7616*b5 - w*0.0168980;
-      data[i] = (b0+b1+b2+b3+b4+b5+b6 + w*0.5362) * 0.11;
-      b6 = w * 0.115926;
-    }
-  }
-  return buf;
+let webSessionId  = 0;
+let allEntries    = [];
+let noiseEntry    = null;
+let droneEntry    = null;
+let solfeggioEntry = null;
+let heartbeatEntry = null;
+let melodyEntry   = null;
+
+function webMakeEntry(src, gain, loop = true) {
+  const ctx = getAudioCtx();
+  const el = new Audio(src);
+  el.loop = loop;
+  const srcNode = ctx.createMediaElementSource(el);
+  const gainNode = ctx.createGain();
+  gainNode.gain.value = 0;
+  srcNode.connect(gainNode);
+  gainNode.connect(ctx.destination);
+  return { el, gainNode, target: Math.min(1, gain * MASTER_SCALE) };
 }
 
-function makeBrownBuffer(ctx) {
-  // Integrated white noise — heavily weighted toward low frequencies, warmest texture
-  const len = ctx.sampleRate * 4;
-  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-  for (let c = 0; c < 2; c++) {
-    const data = buf.getChannelData(c);
-    let last = 0;
-    for (let i = 0; i < len; i++) {
-      const w = Math.random() * 2 - 1;
-      last = (last + 0.02 * w) / 1.02;
-      data[i] = last * 3.5;
-    }
-  }
-  return buf;
-}
+function webStart(playlistName, onMelodyEnd, loopMelody) {
+  webStop(0);
 
-// --- Heartbeat scheduler ---
-// Lub-dub pattern at ~68 bpm (resting maternal heart rate)
-// Uses Web Audio clock for sample-accurate timing
+  const config = PLAYLIST_SOUNDS[playlistName] || {};
+  const thisId = ++webSessionId;
+  const ctx = getAudioCtx();
 
-function scheduleHeartbeat(ctx, targetGain) {
-  const bpm = 68;
-  const interval = 60 / bpm; // ~0.88s per beat
-  nextBeatTime = ctx.currentTime + 0.6; // slight delay before first beat
-
-  function schedulePulse(time) {
-    // LUB — stronger, lower
-    // Frequencies raised to 120→90 Hz (from 70→48) for phone speaker audibility
-    const lubEnv = ctx.createGain();
-    lubEnv.gain.setValueAtTime(0, time);
-    lubEnv.gain.linearRampToValueAtTime(0.65, time + 0.015);
-    lubEnv.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
-    const lubOsc = ctx.createOscillator();
-    lubOsc.type = 'sine';
-    lubOsc.frequency.setValueAtTime(120, time);
-    lubOsc.frequency.exponentialRampToValueAtTime(90, time + 0.15);
-    lubOsc.connect(lubEnv);
-    lubEnv.connect(targetGain);
-    lubOsc.start(time);
-    lubOsc.stop(time + 0.18);
-
-    // DUB — softer, slightly higher, ~240ms after lub
-    // Frequencies raised to 100→78 Hz (from 60→42) for phone speaker audibility
-    const dubTime = time + 0.26;
-    const dubEnv = ctx.createGain();
-    dubEnv.gain.setValueAtTime(0, dubTime);
-    dubEnv.gain.linearRampToValueAtTime(0.40, dubTime + 0.015);
-    dubEnv.gain.exponentialRampToValueAtTime(0.001, dubTime + 0.12);
-    const dubOsc = ctx.createOscillator();
-    dubOsc.type = 'sine';
-    dubOsc.frequency.setValueAtTime(100, dubTime);
-    dubOsc.frequency.exponentialRampToValueAtTime(78, dubTime + 0.12);
-    dubOsc.connect(dubEnv);
-    dubEnv.connect(targetGain);
-    dubOsc.start(dubTime);
-    dubOsc.stop(dubTime + 0.14);
-  }
-
-  // Look-ahead scheduler — schedules beats 150ms ahead using setInterval
-  return setInterval(() => {
-    while (nextBeatTime < ctx.currentTime + 0.15) {
-      schedulePulse(nextBeatTime);
-      nextBeatTime += interval;
-    }
-  }, 25);
-}
-
-// --- Ambient pad crossfade looper ---
-// Overlaps two instances of the buffer with volume envelopes so the loop
-// is inaudible — no click, no gap, no matter what the file's tail sounds like.
-
-function startAmbientPadLoop(ctx, decoded, gainNode) {
-  const duration = decoded.duration;
-  const xfade = 4; // seconds of crossfade overlap
-
-  function play(when) {
-    if (!audioCtx || audioCtx !== ctx) return;
-    const src = ctx.createBufferSource();
-    src.buffer = decoded;
-    const env = ctx.createGain();
-    // Fade in at start, hold, fade out at end
-    env.gain.setValueAtTime(0, when);
-    env.gain.linearRampToValueAtTime(1, when + xfade);
-    env.gain.setValueAtTime(1, when + duration - xfade);
-    env.gain.linearRampToValueAtTime(0, when + duration);
-    src.connect(env);
-    env.connect(gainNode);
-    src.start(when);
-    src.stop(when + duration);
-    activeNodes.push(src);
-  }
-
-  function schedule(when) {
-    if (!audioCtx || audioCtx !== ctx) return;
-    play(when);
-    const nextStart = when + duration - xfade;
-    const delay = Math.max(0, (nextStart - ctx.currentTime - 1) * 1000);
-    setTimeout(() => schedule(nextStart), delay);
-  }
-
-  schedule(ctx.currentTime);
-}
-
-// --- Binaural drone generator ---
-// carrier: base frequency (Hz) — low sine tone, same both ears
-// beat: binaural beat frequency (Hz) — left ear gets carrier, right gets carrier+beat
-// Volume kept very low (0.07) so it sits beneath noise, felt more than heard
-
-function startBinauralDrone(ctx, carrier, beat, targetGain) {
-  const merger = ctx.createChannelMerger(2);
-  merger.connect(targetGain);
-
-  // Left ear — carrier frequency
-  const leftOsc = ctx.createOscillator();
-  leftOsc.type = 'sine';
-  leftOsc.frequency.value = carrier;
-  const leftGain = ctx.createGain();
-  leftGain.gain.value = 1;
-  leftOsc.connect(leftGain);
-  leftGain.connect(merger, 0, 0);
-  leftOsc.start();
-
-  // Right ear — carrier + beat frequency
-  const rightOsc = ctx.createOscillator();
-  rightOsc.type = 'sine';
-  rightOsc.frequency.value = carrier + beat;
-  const rightGain = ctx.createGain();
-  rightGain.gain.value = 1;
-  rightOsc.connect(rightGain);
-  rightGain.connect(merger, 0, 1);
-  rightOsc.start();
-
-  return [leftOsc, rightOsc];
-}
-
-// --- Playlist → sound config ---
-
-// Drone config per playlist:
-//   carrier — low tone that grounds the mix (Hz)
-//   beat    — binaural frequency difference (Hz)
-//             Alpha 8-12 Hz → relaxed alertness
-//             Theta 4-8 Hz  → deep relaxation / meditative
-//             Delta 0.5-4 Hz → deep sleep / restoration
-
-export const PLAYLIST_SOUNDS = {
-  'Calm & Settle':      { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/calmsettle.mp3', melodyGain: 0.70, duration: 147, solfeggio: 528, noiseGain: 0.06, droneGain: 0.07, solfeggioGain: 0.015, label: 'Pink noise · Alpha drone · 528 Hz · melody' },
-  'Big Feelings':       { noise: 'brown', heartbeat: false, drone: { carrier: 200, beat: 8  }, melody: '/audio/bigfeelings.mp3', melodyGain: 0.70, duration: 287, solfeggio: 396, solfeggioGain: 0.02, label: 'Brown noise · Alpha drone · 396 Hz · melody' },
-  'Teething & Comfort': { noise: 'white', heartbeat: false, drone: { carrier: 256, beat: 2  }, melody: '/audio/teething.mp3', melodyGain: 0.70, solfeggio: 174, noiseGain: 0.02, label: 'White noise · Delta drone · 174 Hz · melody' },
-  'Sleep Wind-Down':    { noise: 'pink',  heartbeat: true,  drone: { carrier: 220, beat: 2  }, melody: '/audio/sleep.mp3', melodyGain: 0.70, solfeggio: 285, noiseGain: 0.07, droneGain: 0.05, heartbeatGain: 0.64, solfeggioGain: 0.02, label: 'Pink noise · heartbeat · Delta drone · 285 Hz · melody' },
-  'Immune Support':     { noise: 'pink',  heartbeat: false, drone: { carrier: 220, beat: 10 }, melody: '/audio/immune.mp3', melodyGain: 0.70, solfeggio: 741, solfeggioGain: 0.02, label: 'Pink noise · Alpha drone · 741 Hz · melody' },
-  'Bonding':            { noise: 'pink',  heartbeat: true,  drone: { carrier: 200, beat: 6  }, melody: '/audio/bonding.mp3', melodyGain: 0.70, solfeggio: 639, solfeggioGain: 0.03, label: 'Heartbeat · Theta drone · 639 Hz · melody' },
-};
-
-// --- Public API ---
-
-export function startSession(playlistName, volume = 0.38, onMelodyEnd, loopMelody = false) {
-  stopSession(0);
-
-  const config = PLAYLIST_SOUNDS[playlistName] || { noise: 'pink', heartbeat: false };
-
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-  // iOS unlock: silent Web Audio buffer transitions context suspended → running.
-  // Silent HTML audio element bypasses the hardware mute/silent switch.
-  // Both must be called synchronously within the user gesture.
-  const silentBuf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
-  const silentSrc = audioCtx.createBufferSource();
-  silentSrc.buffer = silentBuf;
-  silentSrc.connect(audioCtx.destination);
-  silentSrc.start(0);
-  audioCtx.resume();
   getSilentAudio().play().catch(() => {});
 
-  masterGain = audioCtx.createGain();
-  masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
-  masterGain.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + 2.5);
-  masterGain.connect(audioCtx.destination);
+  allEntries = [];
 
-  // Noise layer
-  const noiseBuf =
-    config.noise === 'white' ? makeWhiteBuffer(audioCtx) :
-    config.noise === 'brown' ? makeBrownBuffer(audioCtx) :
-    makePinkBuffer(audioCtx);
-
-  noiseGainNode = audioCtx.createGain();
-  noiseGainNode.gain.value = config.noiseGain ?? 0.10;
-
-  const noiseSource = audioCtx.createBufferSource();
-  noiseSource.buffer = noiseBuf;
-  noiseSource.loop = true;
-  noiseSource.connect(noiseGainNode);
-  noiseGainNode.connect(masterGain);
-  noiseSource.start();
-  activeNodes.push(noiseSource);
-
-  // Heartbeat layer
-  hbGainNode = null;
-  if (config.heartbeat) {
-    hbGainNode = audioCtx.createGain();
-    hbGainNode.gain.value = config.heartbeatGain ?? 1.0;
-    hbGainNode.connect(masterGain);
-    schedulerInterval = scheduleHeartbeat(audioCtx, hbGainNode);
+  function addEntry(src, gain, loop = true) {
+    const entry = webMakeEntry(src, gain, loop);
+    allEntries.push(entry);
+    entry.el.play().catch(() => {});
+    return entry;
   }
 
-  // Binaural drone layer
-  droneGainNode = null;
-  if (config.drone) {
-    droneGainNode = audioCtx.createGain();
-    droneGainNode.gain.value = config.droneGain ?? 0.05;
-    droneGainNode.connect(masterGain);
-    const droneNodes = startBinauralDrone(audioCtx, config.drone.carrier, config.drone.beat, droneGainNode);
-    activeNodes.push(...droneNodes);
+  noiseEntry = getNoiseEntry(config.noise || 'pink');
+  noiseEntry.el.currentTime = 0;
+  const noiseTarget = Math.min(1, (config.noiseGain ?? 0.10) * MASTER_SCALE);
+  allEntries.push({ el: noiseEntry.el, gainNode: noiseEntry.gainNode, target: noiseTarget });
+  noiseEntry.el.play().catch(() => {});
+
+  droneEntry     = config.drone     ? addEntry(config.drone,     config.droneGain     ?? 0.05)        : null;
+  solfeggioEntry = config.solfeggio ? addEntry(config.solfeggio, config.solfeggioGain ?? 0.02)        : null;
+  heartbeatEntry = config.heartbeat ? addEntry(config.heartbeat, config.heartbeatGain ?? 0.64)        : null;
+  melodyEntry    = config.melody    ? addEntry(config.melody,    config.melodyGain    ?? 0.70, loopMelody) : null;
+
+  if (melodyEntry && !loopMelody && onMelodyEnd) {
+    melodyEntry.el.onended = () => { if (webSessionId === thisId) onMelodyEnd(3); };
   }
 
-  // Melody overlay layer (async — loads MP3 and plays once over the top)
-  melodyGainNode = null;
-  if (config.melody) {
-    const capturedCtx = audioCtx;
-    melodyGainNode = audioCtx.createGain();
-    melodyGainNode.gain.value = config.melodyGain ?? 0.50;
-    melodyGainNode.connect(masterGain);
-    fetch(config.melody)
-      .then(r => r.arrayBuffer())
-      .then(buf => capturedCtx.decodeAudioData(buf))
-      .then(decoded => {
-        if (!audioCtx || audioCtx !== capturedCtx) return; // session stopped before melody loaded
-        const melodySource = capturedCtx.createBufferSource();
-        melodySource.buffer = decoded;
-        melodySource.loop = loopMelody;
-        melodySource.connect(melodyGainNode);
-        if (!loopMelody) melodySource.onended = () => { if (audioCtx && onMelodyEnd) onMelodyEnd(3); };
-        melodySource.start();
-        activeNodes.push(melodySource);
-      })
-      .catch(() => {}); // silently skip melody if load fails
+  const now = ctx.currentTime;
+  allEntries.forEach(({ gainNode, target }) => {
+    gainNode.gain.cancelScheduledValues(now);
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(target, now + 2.5);
+  });
+}
+
+function webStop(fadeDuration = 2) {
+  const entries = [...allEntries];
+  allEntries = [];
+  noiseEntry = droneEntry = solfeggioEntry = heartbeatEntry = melodyEntry = null;
+
+  if (entries.length === 0) return;
+
+  if (!audioCtx || fadeDuration <= 0) {
+    entries.forEach(({ el, gainNode }) => {
+      if (gainNode) { gainNode.gain.cancelScheduledValues(0); gainNode.gain.value = 0; }
+      el.pause();
+      el.currentTime = 0;
+    });
+    return;
   }
 
-  // Ambient pad layer — looping MP3, warm and continuous, sits beneath everything
-  ambientPadGainNode = null;
-  if (config.ambientPad) {
-    const capturedCtx = audioCtx;
-    ambientPadGainNode = audioCtx.createGain();
-    ambientPadGainNode.gain.value = config.ambientPadGain ?? 0.35;
-    ambientPadGainNode.connect(masterGain);
-    fetch(config.ambientPad)
-      .then(r => r.arrayBuffer())
-      .then(buf => capturedCtx.decodeAudioData(buf))
-      .then(decoded => {
-        if (!audioCtx || audioCtx !== capturedCtx) return;
-        startAmbientPadLoop(capturedCtx, decoded, ambientPadGainNode);
-      })
-      .catch(() => {});
-  }
+  const now = audioCtx.currentTime;
+  entries.forEach(({ el, gainNode }) => {
+    gainNode.gain.cancelScheduledValues(now);
+    gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + fadeDuration);
+  });
+  setTimeout(() => {
+    entries.forEach(({ el }) => { el.pause(); el.currentTime = 0; });
+  }, (fadeDuration + 0.1) * 1000);
+}
 
-  // Solfeggio tone layer — pure sine at the target Hz, very soft, sustained
-  solfeggioGainNode = null;
-  if (config.solfeggio) {
-    solfeggioGainNode = audioCtx.createGain();
-    solfeggioGainNode.gain.value = config.solfeggioGain ?? 0.04;
-    solfeggioGainNode.connect(masterGain);
-    const solfeggioOsc = audioCtx.createOscillator();
-    solfeggioOsc.type = 'sine';
-    solfeggioOsc.frequency.value = config.solfeggio;
-    solfeggioOsc.connect(solfeggioGainNode);
-    solfeggioOsc.start();
-    activeNodes.push(solfeggioOsc);
+function webSetLayerGain(layer, value) {
+  if (!audioCtx) return;
+  const vol = Math.min(1, value * MASTER_SCALE);
+  const map = { noise: noiseEntry, drone: droneEntry, solfeggio: solfeggioEntry, heartbeat: heartbeatEntry, melody: melodyEntry };
+  const entry = map[layer];
+  if (!entry?.gainNode) return;
+  const now = audioCtx.currentTime;
+  entry.gainNode.gain.cancelScheduledValues(now);
+  entry.gainNode.gain.setValueAtTime(vol, now);
+  const allEntry = allEntries.find(e => e.gainNode === entry.gainNode);
+  if (allEntry) allEntry.target = vol;
+}
+
+// ─── PUBLIC API ───────────────────────────────────────────────────────────────
+
+export function startSession(playlistName, _volume = 0.38, onMelodyEnd, loopMelody = false) {
+  if (IS_NATIVE) {
+    nativeStart(playlistName, onMelodyEnd, loopMelody);
+    return;
   }
+  webStart(playlistName, onMelodyEnd, loopMelody);
 }
 
 export function stopSession(fadeDuration = 2) {
-  silentAudio?.pause();
-  if (schedulerInterval) {
-    clearInterval(schedulerInterval);
-    schedulerInterval = null;
+  if (IS_NATIVE) {
+    nativeStop(fadeDuration);
+    return;
   }
-  if (!audioCtx || !masterGain) return;
-
-  // Snapshot and clear state immediately so a new session starting right after
-  // this call doesn't have its nodes caught by the delayed cleanup timeout.
-  const nodesToStop = [...activeNodes];
-  activeNodes = [];
-  noiseGainNode = null;
-  droneGainNode = null;
-  hbGainNode = null;
-  melodyGainNode = null;
-  solfeggioGainNode = null;
-  ambientPadGainNode = null;
-
-  const now = audioCtx.currentTime;
-  masterGain.gain.cancelScheduledValues(now);
-  masterGain.gain.setValueAtTime(masterGain.gain.value, now);
-  masterGain.gain.linearRampToValueAtTime(0, now + fadeDuration);
-
-  const ctx = audioCtx;
-  audioCtx = null;
-  masterGain = null;
-
-  setTimeout(() => {
-    nodesToStop.forEach(n => { try { n.stop(); } catch {} });
-    try { ctx.close(); } catch {}
-  }, (fadeDuration + 0.2) * 1000);
+  webStop(fadeDuration);
 }
 
-export function getPlaylistLabel(name) {
-  return PLAYLIST_SOUNDS[name]?.label || 'Pink noise';
+export function setLayerGain(layer, value) {
+  if (IS_NATIVE) {
+    nativeSetLayerGain(layer, value);
+    return;
+  }
+  webSetLayerGain(layer, value);
 }
 
 export function resumeContext() {
+  if (IS_NATIVE) return; // native audio handles background on its own
   if (audioCtx?.state === 'suspended') audioCtx.resume();
+  getSilentAudio().play().catch(() => {});
 }
 
-// layer: 'noise' | 'drone' | 'heartbeat'
-// value: 0.0 – 1.0
-export function setLayerGain(layer, value) {
-  if (layer === 'noise' && noiseGainNode) noiseGainNode.gain.value = value;
-  if (layer === 'drone' && droneGainNode) droneGainNode.gain.value = value;
-  if (layer === 'heartbeat' && hbGainNode) hbGainNode.gain.value = value;
-  if (layer === 'melody' && melodyGainNode) melodyGainNode.gain.value = value;
-  if (layer === 'solfeggio' && solfeggioGainNode) solfeggioGainNode.gain.value = value;
-  if (layer === 'ambientPad' && ambientPadGainNode) ambientPadGainNode.gain.value = value;
+export function getPlaylistLabel(name) {
+  return PLAYLIST_SOUNDS[name]?.label || 'Pink noise · melody';
 }
