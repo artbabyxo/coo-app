@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Purchases } from '@revenuecat/purchases-capacitor';
 import { App } from '@capacitor/app';
+import { Share } from '@capacitor/share';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
 import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS, resumeContext } from '../audioEngine';
@@ -142,6 +143,15 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
   const releaseWakeLock = useCallback(() => {
     if (wakeLockRef.current) { wakeLockRef.current.release(); wakeLockRef.current = null; }
+  }, []);
+
+  const handleShare = useCallback(async () => {
+    const url = 'https://apps.apple.com/app/id6764710380';
+    try {
+      await Share.share({ title: 'COO', text: 'COO — a sound companion for babies and parents. 🕊️', url, dialogTitle: 'Share COO' });
+    } catch {
+      if (navigator.share) { navigator.share({ title: 'COO', text: 'COO — a sound companion for babies and parents. 🕊️', url }); }
+    }
   }, []);
 
   useEffect(() => {
@@ -473,9 +483,16 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         <NorthStarIcon />
       </button>
 
-      {/* Info — top right — about */}
+      {/* Info + Share — top right */}
       <button style={styles.infoBtn} onClick={() => setAboutOpen(true)}>
         <InfoIcon />
+      </button>
+      <button style={styles.shareBtn} onClick={handleShare}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+          <polyline points="16 6 12 2 8 6"/>
+          <line x1="12" y1="2" x2="12" y2="15"/>
+        </svg>
       </button>
 
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginTop: '-48px' }}>
@@ -684,6 +701,19 @@ const styles = {
   infoBtn: {
     position: 'absolute',
     top: 'calc(env(safe-area-inset-top) + 16px)',
+    right: '54px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.7,
+  },
+  shareBtn: {
+    position: 'absolute',
+    top: 'calc(env(safe-area-inset-top) + 16px)',
     right: '20px',
     background: 'none',
     border: 'none',
@@ -692,6 +722,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    color: colors.text,
     opacity: 0.7,
   },
   aboutOverlay: {
