@@ -6,7 +6,7 @@ const MASTER_SCALE = 0.38;
 
 export const PLAYLIST_SOUNDS = {
   'Calm & Settle': {
-    noise: 'pink', noiseGain: 0.05,
+    noise: 'pink', noiseGain: 0.06,
     drone: '/audio/drone-calm.wav', droneGain: 0.10,
     solfeggio: '/audio/solfeggio-528.wav', solfeggioGain: 0.02,
     melody: '/audio/calmsettle.mp3', melodyGain: 1.0,
@@ -37,7 +37,7 @@ export const PLAYLIST_SOUNDS = {
   'Immune Support': {
     noise: 'pink', noiseGain: 0.05,
     drone: '/audio/drone-calm.wav', droneGain: 0.07,
-    solfeggio: '/audio/solfeggio-741.wav', solfeggioGain: 0.03,
+    solfeggio: '/audio/solfeggio-741.wav', solfeggioGain: 0.02,
     melody: '/audio/immune.mp3', melodyGain: 1.0,
     label: 'Pink noise · Alpha drone · 741 Hz · melody',
   },
@@ -45,7 +45,7 @@ export const PLAYLIST_SOUNDS = {
     noise: 'pink', noiseGain: 0.12,
     drone: '/audio/drone-bonding.wav', droneGain: 0.09,
     heartbeat: '/audio/heartbeat.wav', heartbeatGain: 0.78,
-    solfeggio: '/audio/solfeggio-639.wav', solfeggioGain: 0.07,
+    solfeggio: '/audio/solfeggio-639.wav', solfeggioGain: 0.05,
     melody: '/audio/bonding.mp3', melodyGain: 0.50,
     label: 'Heartbeat · Theta drone · 639 Hz · melody',
   },
