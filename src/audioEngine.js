@@ -110,11 +110,11 @@ async function nativeLoad(assetId, src, targetVol, loop) {
       assetPath: toBundlePath(src),
       volume: 0,
       audioChannelNum: 1,
-      isLooping: loop,
     });
     nativeActiveIds.add(assetId);
     nativeCurrentVols[assetId] = 0;
     await NativeAudio.play({ assetId });
+    if (loop) await NativeAudio.loop({ assetId }).catch(() => {});
     nativeFade(assetId, targetVol, 2500);
   } catch (e) {
     console.warn(`[NativeAudio] load failed: ${assetId}`, e);
