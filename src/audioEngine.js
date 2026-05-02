@@ -13,10 +13,10 @@ export const PLAYLIST_SOUNDS = {
     label: 'Pink noise · Alpha drone · 528 Hz · melody',
   },
   'Big Feelings': {
-    noise: 'brown', noiseGain: 0.09,
-    drone: '/audio/drone-bigfeelings.wav', droneGain: 0.03,
+    noise: 'brown', noiseGain: 0.33,
+    drone: '/audio/drone-bigfeelings.wav', droneGain: 0.04,
     solfeggio: '/audio/solfeggio-396.wav', solfeggioGain: 0.05,
-    melody: '/audio/bigfeelings.mp3', melodyGain: 1.0,
+    melody: '/audio/bigfeelings.mp3', melodyGain: 0.70,
     label: 'Brown noise · Alpha drone · 396 Hz · melody',
   },
   'Teething & Comfort': {
