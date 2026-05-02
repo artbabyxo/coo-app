@@ -127,7 +127,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const [aboutOpen,        setAboutOpen]        = useState(false);
   const [upgradeOpen,      setUpgradeOpen]       = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen]  = useState(false);
-  const [isPremium,        setIsPremium]         = useState(true); // revert to false before archive
+  const [isPremium,        setIsPremium]         = useState(false);
   const [sessionMode,      setSessionMode]       = useState('melody'); // 'melody' | 15 | 30
   const [playing,          setPlaying]           = useState(false);
   const [elapsed,          setElapsed]           = useState(0);
