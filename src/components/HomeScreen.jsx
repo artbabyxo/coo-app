@@ -340,9 +340,12 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
               style={styles.purchaseBtn}
               onClick={async () => {
                 try {
-                  const { customerInfo } = await Purchases.purchaseProduct({
-                    productIdentifier: IAP_PRODUCT_ID,
-                  });
+                  const { offerings } = await Purchases.getOfferings();
+                  const pkg = offerings.current?.availablePackages.find(
+                    p => p.storeProduct.productIdentifier === IAP_PRODUCT_ID
+                  );
+                  if (!pkg) throw new Error('Product not found in offerings');
+                  const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
                   if (customerInfo.entitlements.active[IAP_ENTITLEMENT_ID]) {
                     localStorage.setItem('coo_premium', 'true');
                     setIsPremium(true);
