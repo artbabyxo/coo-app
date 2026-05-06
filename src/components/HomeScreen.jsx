@@ -11,7 +11,7 @@ import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOU
 // (Project → API Keys → Apple App Store → Public app-specific API key)
 const REVENUECAT_API_KEY = 'appl_VVqVfuMcssMCBkMalfEZmOYWgUL';
 const IAP_PRODUCT_ID     = 'com.northstarstudios.coo.premium';
-const IAP_ENTITLEMENT_ID = 'premium';
+const IAP_ENTITLEMENT_ID = 'COO - Baby Sound Therapy Premium';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PREMIUM_PLAYLISTS = ['Teething & Comfort', 'Sleep Wind-Down'];
