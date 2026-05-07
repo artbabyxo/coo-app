@@ -352,11 +352,10 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                     setUpgradeOpen(false);
                   }
                 } catch (err) {
-                  // PurchaseCancelledError code 1 = user cancelled — not an error worth surfacing
                   if (err?.code !== 1) {
-                    console.error('[IAP] Purchase failed:', err?.message);
+                    console.error('[IAP] Purchase failed:', err?.message, err);
+                    alert(`IAP error: ${err?.message || JSON.stringify(err)}`);
                   }
-                  // Stay on upgrade screen; don't crash
                 }
               }}
             >
