@@ -354,7 +354,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                 } catch (err) {
                   if (err?.code !== 1) {
                     console.error('[IAP] Purchase failed:', err?.message, err);
-                    alert(`IAP error: ${err?.message || JSON.stringify(err)}`);
+                    alert('Unable to complete purchase. Please try again or contact support.');
                   }
                 }
               }}
