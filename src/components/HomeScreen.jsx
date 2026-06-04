@@ -537,9 +537,12 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                 }
                 try {
                   const { offerings } = await Purchases.getOfferings();
+                  console.log('[IAP] offerings.current:', JSON.stringify(offerings.current));
                   const pkg = offerings.current?.availablePackages.find(
                     p => p.storeProduct.productIdentifier === IAP_PRODUCT_ID
                   );
+                  console.log('[IAP] pkg found:', !!pkg, '| looking for:', IAP_PRODUCT_ID);
+                  console.log('[IAP] available packages:', offerings.current?.availablePackages?.map(p => p.storeProduct.productIdentifier));
                   if (!pkg) throw new Error('Product not found in offerings');
                   const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
                   if (customerInfo.entitlements.active[IAP_ENTITLEMENT_ID]) {
@@ -549,7 +552,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                   }
                 } catch (err) {
                   if (err?.code !== 1) {
-                    console.error('[IAP] Purchase failed:', err?.message, err);
+                    console.error('[IAP] Purchase error:', err?.message, '| code:', err?.code, '| full:', JSON.stringify(err));
                   }
                 }
               }}
