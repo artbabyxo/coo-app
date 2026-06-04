@@ -12,6 +12,34 @@ import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOU
 const REVENUECAT_API_KEY = 'appl_VVqVfuMcssMCBkMalfEZmOYWgUL';
 const IAP_PRODUCT_ID     = 'com.northstarstudios.coo.premium';
 const IAP_ENTITLEMENT_ID = 'COO - Baby Sound Therapy Premium';
+
+// ─── Play All ─────────────────────────────────────────────────────────────────
+const PLAY_ALL_DEFAULT = [
+  'Big Feelings',
+  'Bonding',
+  'Calm & Settle',
+  'Immune Support',
+  'Teething & Comfort',
+  'Sleep Wind-Down',
+];
+
+function loadQueue() {
+  try {
+    const raw = localStorage.getItem('coo_play_all_queue');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length === PLAY_ALL_DEFAULT.length &&
+          PLAY_ALL_DEFAULT.every(name => parsed.includes(name))) {
+        return parsed;
+      }
+    }
+  } catch (_) {}
+  return [...PLAY_ALL_DEFAULT];
+}
+
+function saveQueue(queue) {
+  try { localStorage.setItem('coo_play_all_queue', JSON.stringify(queue)); } catch (_) {}
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PREMIUM_PLAYLISTS = ['Teething & Comfort', 'Sleep Wind-Down'];
@@ -66,6 +94,25 @@ const InfoIcon = () => (
     <circle cx="12" cy="12" r="10" stroke={colors.textMuted} strokeWidth="1.5"/>
     <path d="M12 11v5" stroke={colors.textMuted} strokeWidth="1.5" strokeLinecap="round"/>
     <circle cx="12" cy="8" r="0.5" fill={colors.textMuted} stroke={colors.textMuted} strokeWidth="1"/>
+  </svg>
+);
+
+const PlayAllIcon = ({ color = 'white' }) => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill={color}>
+    <polygon points="5,3 19,12 5,21"/>
+    <line x1="22" y1="4" x2="22" y2="20" stroke={color} strokeWidth="2.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const ArrowUpIcon = ({ color }) => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="18 15 12 9 6 15"/>
+  </svg>
+);
+
+const ArrowDownIcon = ({ color }) => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9"/>
   </svg>
 );
 
@@ -132,9 +179,20 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const [sessionMode,      setSessionMode]       = useState('melody'); // 'melody' | 15 | 30
   const [playing,          setPlaying]           = useState(false);
   const [elapsed,          setElapsed]           = useState(0);
+  const [ratingOpen,       setRatingOpen]        = useState(false);
+  const [ratingPlaylist,   setRatingPlaylist]    = useState('');
   const intervalRef  = useRef(null);
   const wakeLockRef  = useRef(null);
   const playingRef   = useRef(false);
+
+  // ─── Play All state ──────────────────────────────────────────────────────────
+  const [playAllActive,    setPlayAllActive]    = useState(false);
+  const [playAllQueue,     setPlayAllQueue]     = useState(() => loadQueue());
+  const [playAllIndex,     setPlayAllIndex]     = useState(0);
+  const [queueReorderOpen, setQueueReorderOpen] = useState(false);
+  const playAllActiveRef = useRef(false);
+  const playAllIndexRef  = useRef(0);
+  const playAllQueueRef  = useRef(playAllQueue);
 
   const requestWakeLock = useCallback(async () => {
     if (!('wakeLock' in navigator)) return;
@@ -238,13 +296,129 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
     setMixerOpen(false);
   }, [selectedPlaylist]);
 
-  function fadeStop(fadeDuration = 3) {
+  // Keep queue ref in sync with state
+  function updateQueue(newQueue) {
+    playAllQueueRef.current = newQueue;
+    setPlayAllQueue(newQueue);
+    saveQueue(newQueue);
+  }
+
+  function fullStop(fadeDuration = 3) {
     stopSession(fadeDuration);
     setPlaying(false);
     playingRef.current = false;
     clearInterval(intervalRef.current);
     setElapsed(0);
     releaseWakeLock();
+    // Clear Play All state
+    playAllActiveRef.current = false;
+    playAllIndexRef.current = 0;
+    setPlayAllActive(false);
+    setPlayAllIndex(0);
+  }
+
+  // Advance Play All to a specific index (or stop if past the end)
+  function advancePlayAll(index, mode) {
+    const queue = playAllQueueRef.current;
+    if (index >= queue.length) {
+      // Last playlist done - fade out and stop
+      fullStop(3);
+      return;
+    }
+
+    const playlistName = queue[index];
+    playAllIndexRef.current = index;
+    setPlayAllIndex(index);
+    onSelectPlaylist(playlistName);
+
+    const loopMelody = mode !== 'melody';
+    const limitSecs  = loopMelody ? mode * 60 : null;
+
+    stopSession(0); // cut immediately before starting next
+    startSession(
+      playlistName,
+      0.38,
+      loopMelody ? null : (_fadeDuration) => {
+        if (playAllActiveRef.current) {
+          advancePlayAll(playAllIndexRef.current + 1, mode);
+        }
+      },
+      loopMelody,
+    );
+
+    setElapsed(0);
+    clearInterval(intervalRef.current);
+
+    intervalRef.current = setInterval(() => {
+      setElapsed(e => {
+        if (limitSecs && e + 1 >= limitSecs) {
+          clearInterval(intervalRef.current);
+          if (playAllActiveRef.current) {
+            advancePlayAll(playAllIndexRef.current + 1, mode);
+          } else {
+            fullStop(3);
+          }
+          return 0;
+        }
+        return e + 1;
+      });
+    }, 1000);
+  }
+
+  function handlePlayAll() {
+    if (!isPremium) {
+      setUpgradeModalOpen(true);
+      return;
+    }
+
+    const queue = playAllQueueRef.current;
+    const firstPlaylist = queue[0];
+    const mode = sessionMode;
+    const loopMelody = mode !== 'melody';
+    const limitSecs  = loopMelody ? mode * 60 : null;
+
+    onSelectPlaylist(firstPlaylist);
+    playAllActiveRef.current = true;
+    playAllIndexRef.current = 0;
+    setPlayAllActive(true);
+    setPlayAllIndex(0);
+
+    stopSession(0);
+    startSession(
+      firstPlaylist,
+      0.38,
+      loopMelody ? null : (_fadeDuration) => {
+        if (playAllActiveRef.current) {
+          advancePlayAll(playAllIndexRef.current + 1, mode);
+        }
+      },
+      loopMelody,
+    );
+
+    setPlaying(true);
+    playingRef.current = true;
+    setElapsed(0);
+    requestWakeLock();
+
+    clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setElapsed(e => {
+        if (limitSecs && e + 1 >= limitSecs) {
+          clearInterval(intervalRef.current);
+          if (playAllActiveRef.current) {
+            advancePlayAll(playAllIndexRef.current + 1, mode);
+          } else {
+            fullStop(3);
+          }
+          return 0;
+        }
+        return e + 1;
+      });
+    }, 1000);
+  }
+
+  function fadeStop(fadeDuration = 3) {
+    fullStop(fadeDuration);
   }
 
   function handlePlayPause() {
@@ -255,7 +429,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       startSession(
         selectedPlaylist,
         0.38,
-        loopMelody ? null : (fadeDuration) => fadeStop(fadeDuration),
+        loopMelody ? null : (fadeDuration) => fullStop(fadeDuration),
         loopMelody,
       );
 
@@ -267,7 +441,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       intervalRef.current = setInterval(() => {
         setElapsed(e => {
           if (limitSecs && e + 1 >= limitSecs) {
-            fadeStop(3);
+            fullStop(3);
             return limitSecs;
           }
           return e + 1;
@@ -279,12 +453,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   }
 
   function handleStop() {
-    stopSession();
-    setPlaying(false);
-    playingRef.current = false;
-    clearInterval(intervalRef.current);
-    setElapsed(0);
-    releaseWakeLock();
+    fullStop(2);
   }
 
   function handleSelect(name) {
@@ -326,6 +495,8 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                 ['all 6 playlists', 'including Teething & Comfort and Sleep Wind-Down'],
                 ['sound mix controls', 'fine-tune every layer to your baby'],
                 ['15 & 30 min sessions', 'looped for the long haul'],
+                ['play all playlists', 'one tap, the full sequence while you rest'],
+                ['custom queue order', 'arrange the playlists your way'],
               ].map(([title, desc]) => (
                 <div key={title} style={styles.upgradeFeatureRow}>
                   <NorthStarIcon size={11} color={colors.sageMid} />
@@ -359,7 +530,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                 }
               }}
             >
-              unlock · $2.99
+              unlock · $4.99
             </button>
             <p
               style={{ ...styles.restoreLink, cursor: 'pointer' }}
@@ -570,7 +741,11 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
       {/* Playlist name — shown while playing */}
       {playing && (
-        <p style={styles.playlistLabel}>{selectedPlaylist.toLowerCase()}</p>
+        <p style={styles.playlistLabel}>
+          {playAllActive
+            ? `${selectedPlaylist.toLowerCase()} · ${playAllIndex + 1} / ${playAllQueue.length}`
+            : selectedPlaylist.toLowerCase()}
+        </p>
       )}
 
       {/* Timer */}
@@ -623,6 +798,20 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         </div>
       )}
 
+      {/* Play All button — shown when not playing */}
+      {!playing && (
+        <button
+          onClick={handlePlayAll}
+          style={styles.playAllBtn}
+        >
+          <PlayAllIcon color={isPremium ? colors.sageDeep : colors.textMuted} />
+          <span style={{ ...styles.playAllLabel, color: isPremium ? colors.sageDeep : colors.textMuted }}>
+            play all
+          </span>
+          {!isPremium && <NorthStarIcon size={10} color={colors.textMuted} />}
+        </button>
+      )}
+
       {/* Breath cue */}
       <p style={styles.breathCue}>
         {playing
@@ -666,6 +855,80 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
 
       {!playing && (
         <div style={styles.soundPill}>{getPlaylistLabel(selectedPlaylist)}</div>
+      )}
+
+      {/* Queue reorder — shown when not playing */}
+      {!playing && (
+        <div style={styles.queueCard}>
+          <button
+            style={styles.queueHeader}
+            onClick={() => isPremium ? setQueueReorderOpen(o => !o) : setUpgradeModalOpen(true)}
+          >
+            <div style={{ textAlign: 'left' }}>
+              <p style={styles.mixerTitle}>play all order</p>
+              {!queueReorderOpen && (
+                <p style={styles.mixerSublabel}>
+                  {isPremium ? 'tap to arrange' : 'unlock to customize · coo premium'}
+                </p>
+              )}
+            </div>
+            {isPremium
+              ? <ChevronIcon open={queueReorderOpen} />
+              : <NorthStarIcon size={14} color={colors.textMuted} />
+            }
+          </button>
+          {isPremium && (
+            <div style={{
+              overflow: 'hidden',
+              maxHeight: queueReorderOpen ? '400px' : '0px',
+              opacity: queueReorderOpen ? 1 : 0,
+              transition: 'max-height 0.35s ease, opacity 0.2s ease',
+            }}>
+              <div style={styles.queueList}>
+                {playAllQueue.map((name, idx) => (
+                  <div key={name} style={styles.queueRow}>
+                    <span style={styles.queueIndex}>{idx + 1}</span>
+                    <span style={styles.queueName}>{name.toLowerCase()}</span>
+                    <div style={styles.queueArrows}>
+                      <button
+                        style={{
+                          ...styles.queueArrowBtn,
+                          opacity: idx === 0 ? 0.25 : 1,
+                          cursor: idx === 0 ? 'default' : 'pointer',
+                        }}
+                        disabled={idx === 0}
+                        onClick={() => {
+                          if (idx === 0) return;
+                          const next = [...playAllQueue];
+                          [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+                          updateQueue(next);
+                        }}
+                      >
+                        <ArrowUpIcon color={colors.textMuted} />
+                      </button>
+                      <button
+                        style={{
+                          ...styles.queueArrowBtn,
+                          opacity: idx === playAllQueue.length - 1 ? 0.25 : 1,
+                          cursor: idx === playAllQueue.length - 1 ? 'default' : 'pointer',
+                        }}
+                        disabled={idx === playAllQueue.length - 1}
+                        onClick={() => {
+                          if (idx === playAllQueue.length - 1) return;
+                          const next = [...playAllQueue];
+                          [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+                          updateQueue(next);
+                        }}
+                      >
+                        <ArrowDownIcon color={colors.textMuted} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       <p style={styles.volumeNote}>keep volume comfortable · device away from baby</p>
@@ -1017,6 +1280,84 @@ const styles = {
     textAlign: 'center',
     margin: 0,
     marginTop: 'auto',
+  },
+  playAllBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '7px',
+    background: colors.surface,
+    border: `1px solid ${colors.surfaceDeep}`,
+    borderRadius: '20px',
+    padding: '7px 18px',
+    cursor: 'pointer',
+    transition: 'opacity 0.2s ease',
+  },
+  playAllLabel: {
+    fontSize: '11px',
+    letterSpacing: '0.10em',
+    fontFamily: 'Georgia, serif',
+    fontStyle: 'italic',
+  },
+  queueCard: {
+    width: '100%',
+    maxWidth: '320px',
+    background: colors.surface,
+    borderRadius: '16px',
+    border: `1px solid ${colors.surfaceDeep}`,
+    overflow: 'hidden',
+  },
+  queueHeader: {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '13px 16px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    gap: '12px',
+  },
+  queueList: {
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '0 12px 12px',
+    gap: '2px',
+  },
+  queueRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '6px 4px',
+    borderBottom: `1px solid ${colors.surfaceDeep}`,
+  },
+  queueIndex: {
+    fontSize: '10px',
+    color: colors.textMuted,
+    fontVariantNumeric: 'tabular-nums',
+    width: '16px',
+    flexShrink: 0,
+    textAlign: 'center',
+  },
+  queueName: {
+    fontSize: '12px',
+    color: colors.text,
+    letterSpacing: '0.04em',
+    flex: 1,
+  },
+  queueArrows: {
+    display: 'flex',
+    gap: '2px',
+    flexShrink: 0,
+  },
+  queueArrowBtn: {
+    background: 'none',
+    border: 'none',
+    padding: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '6px',
+    transition: 'opacity 0.15s ease',
   },
   playlistLabel: {
     fontSize: '13px',
