@@ -927,12 +927,10 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
             style={styles.queueHeader}
             onClick={() => isPremium ? setQueueReorderOpen(o => !o) : setUpgradeModalOpen(true)}
           >
-            <div style={{ textAlign: 'left' }}>
+            <div style={{ textAlign: 'center', flex: 1 }}>
               <p style={styles.mixerTitle}>play all order</p>
-              {!queueReorderOpen && (
-                <p style={styles.mixerSublabel}>
-                  {isPremium ? 'tap to arrange' : 'unlock to customize · coo premium'}
-                </p>
+              {!isPremium && (
+                <p style={styles.mixerSublabel}>coo premium</p>
               )}
             </div>
             {isPremium
