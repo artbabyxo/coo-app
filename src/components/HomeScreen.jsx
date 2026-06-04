@@ -303,7 +303,22 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
     saveQueue(newQueue);
   }
 
-  function fullStop(fadeDuration = 3) {
+  // ─── Session rating helpers ───────────────────────────────────────────────
+  function isRatingOff() {
+    try { return localStorage.getItem('coo_session_rating_off') === 'true'; } catch (_) { return false; }
+  }
+
+  function saveRating(playlist, rating) {
+    try {
+      const existing = JSON.parse(localStorage.getItem('coo_session_ratings') || '[]');
+      existing.push({ ts: Date.now(), playlist, rating });
+      localStorage.setItem('coo_session_ratings', JSON.stringify(existing));
+    } catch (_) {}
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
+  function fullStop(fadeDuration = 3, natural = false) {
+    const currentPlaylist = selectedPlaylist;
     stopSession(fadeDuration);
     setPlaying(false);
     playingRef.current = false;
@@ -315,14 +330,19 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
     playAllIndexRef.current = 0;
     setPlayAllActive(false);
     setPlayAllIndex(0);
+    // Show rating sheet if this was a natural session end
+    if (natural && !isRatingOff()) {
+      setRatingPlaylist(currentPlaylist);
+      setRatingOpen(true);
+    }
   }
 
   // Advance Play All to a specific index (or stop if past the end)
   function advancePlayAll(index, mode) {
     const queue = playAllQueueRef.current;
     if (index >= queue.length) {
-      // Last playlist done - fade out and stop
-      fullStop(3);
+      // Last playlist done - fade out and stop (natural end)
+      fullStop(3, true);
       return;
     }
 
@@ -429,7 +449,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       startSession(
         selectedPlaylist,
         0.38,
-        loopMelody ? null : (fadeDuration) => fullStop(fadeDuration),
+        loopMelody ? null : (fadeDuration) => fullStop(fadeDuration, true),
         loopMelody,
       );
 
@@ -441,7 +461,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
       intervalRef.current = setInterval(() => {
         setElapsed(e => {
           if (limitSecs && e + 1 >= limitSecs) {
-            fullStop(3);
+            fullStop(3, true);
             return limitSecs;
           }
           return e + 1;
@@ -453,7 +473,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   }
 
   function handleStop() {
-    fullStop(2);
+    fullStop(2, false); // manual stop - no rating
   }
 
   function handleSelect(name) {
@@ -647,6 +667,42 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
               </p>
               <p style={styles.aboutFooter}>coo · north star studios · 2026</p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* How'd it go? — post-session rating sheet */}
+      {ratingOpen && (
+        <div style={styles.ratingOverlay}>
+          <div style={styles.ratingCard}>
+            <p style={styles.ratingQuestion}>how'd it go?</p>
+            <div style={styles.ratingOptions}>
+              {[
+                { label: 'it helped 🕊️', value: 'helped' },
+                { label: 'a little ✨',              value: 'little' },
+                { label: 'not tonight 🌙',     value: 'not-tonight' },
+              ].map(({ label, value }) => (
+                <button
+                  key={value}
+                  style={styles.ratingOption}
+                  onClick={() => {
+                    saveRating(ratingPlaylist, value);
+                    setRatingOpen(false);
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <button
+              style={styles.ratingDismiss}
+              onClick={() => {
+                try { localStorage.setItem('coo_session_rating_off', 'true'); } catch (_) {}
+                setRatingOpen(false);
+              }}
+            >
+              turn this off
+            </button>
           </div>
         </div>
       )}
@@ -1372,5 +1428,67 @@ const styles = {
     letterSpacing: '0.10em',
     fontStyle: 'italic',
     margin: 0,
+  },
+  ratingOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(30, 42, 53, 0.28)',
+    zIndex: 400,
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)',
+  },
+  ratingCard: {
+    background: colors.bg,
+    width: '100%',
+    maxWidth: '480px',
+    borderRadius: '24px',
+    padding: '28px 28px 24px',
+    boxSizing: 'border-box',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '16px',
+  },
+  ratingQuestion: {
+    fontSize: '16px',
+    fontFamily: 'Georgia, serif',
+    fontStyle: 'italic',
+    color: colors.text,
+    letterSpacing: '0.06em',
+    margin: 0,
+  },
+  ratingOptions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    width: '100%',
+  },
+  ratingOption: {
+    background: colors.surface,
+    border: `1px solid ${colors.surfaceDeep}`,
+    borderRadius: '14px',
+    padding: '13px 16px',
+    fontSize: '14px',
+    color: colors.text,
+    letterSpacing: '0.04em',
+    cursor: 'pointer',
+    width: '100%',
+    textAlign: 'center',
+    fontFamily: 'Georgia, serif',
+    fontStyle: 'italic',
+    transition: 'background 0.15s ease',
+  },
+  ratingDismiss: {
+    background: 'none',
+    border: 'none',
+    fontSize: '11px',
+    color: colors.textMuted,
+    letterSpacing: '0.06em',
+    cursor: 'pointer',
+    padding: '4px 8px',
+    marginTop: '2px',
+    opacity: 0.7,
   },
 };
