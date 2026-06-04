@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Purchases } from '@revenuecat/purchases-capacitor';
 import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
@@ -530,6 +531,10 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
             <button
               style={styles.purchaseBtn}
               onClick={async () => {
+                if (!Capacitor.isNativePlatform()) {
+                  setUpgradeOpen(false);
+                  return;
+                }
                 try {
                   const { offerings } = await Purchases.getOfferings();
                   const pkg = offerings.current?.availablePackages.find(
@@ -545,7 +550,6 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                 } catch (err) {
                   if (err?.code !== 1) {
                     console.error('[IAP] Purchase failed:', err?.message, err);
-                    alert('Unable to complete purchase. Please try again or contact support.');
                   }
                 }
               }}
