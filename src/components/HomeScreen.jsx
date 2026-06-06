@@ -355,35 +355,38 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
     const loopMelody = mode !== 'melody';
     const limitSecs  = loopMelody ? mode * 60 : null;
 
-    stopSession(0); // cut immediately before starting next
-    startSession(
-      playlistName,
-      0.38,
-      loopMelody ? null : (_fadeDuration) => {
-        if (playAllActiveRef.current) {
-          advancePlayAll(playAllIndexRef.current + 1, mode);
-        }
-      },
-      loopMelody,
-    );
+    stopSession(0.5); // 0.5s fade out before next playlist
 
-    setElapsed(0);
-    clearInterval(intervalRef.current);
-
-    intervalRef.current = setInterval(() => {
-      setElapsed(e => {
-        if (limitSecs && e + 1 >= limitSecs) {
-          clearInterval(intervalRef.current);
+    setTimeout(() => {
+      startSession(
+        playlistName,
+        0.38,
+        loopMelody ? null : (_fadeDuration) => {
           if (playAllActiveRef.current) {
             advancePlayAll(playAllIndexRef.current + 1, mode);
-          } else {
-            fullStop(3);
           }
-          return 0;
-        }
-        return e + 1;
-      });
-    }, 1000);
+        },
+        loopMelody,
+      );
+
+      setElapsed(0);
+      clearInterval(intervalRef.current);
+
+      intervalRef.current = setInterval(() => {
+        setElapsed(e => {
+          if (limitSecs && e + 1 >= limitSecs) {
+            clearInterval(intervalRef.current);
+            if (playAllActiveRef.current) {
+              advancePlayAll(playAllIndexRef.current + 1, mode);
+            } else {
+              fullStop(3);
+            }
+            return 0;
+          }
+          return e + 1;
+        });
+      }, 1000);
+    }, 500);
   }
 
   function handlePlayAll() {
