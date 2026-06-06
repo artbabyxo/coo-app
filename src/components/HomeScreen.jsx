@@ -918,12 +918,10 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         </div>
       )}
 
-      {/* Breath cue */}
-      <p style={styles.breathCue}>
-        {playing
-          ? "breathe with your baby.\nyou're already doing it."
-          : 'choose a moment, then press play.'}
-      </p>
+      {/* Breath cue — idle only */}
+      {!playing && (
+        <p style={styles.breathCue}>choose a moment, then press play.</p>
+      )}
 
       {/* Duration picker — shown when not playing */}
       {!playing && (
@@ -959,23 +957,22 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         </div>
       )}
 
-      {!playing && (
-        <div style={styles.soundPill}>{getPlaylistLabel(selectedPlaylist)}</div>
-      )}
-
       {/* Unified Play All section — collapsible, shown when not playing */}
       {!playing && (
         <div style={styles.playAllSection}>
-          <div style={styles.playAllHeader}>
-            <button onClick={() => setPlayAllOpen(o => !o)} style={styles.playAllToggle}>
+          <button onClick={() => setPlayAllOpen(o => !o)} style={styles.playAllHeader}>
+            <ChevronIcon open={playAllOpen} />
+            <div style={{ flex: 1, textAlign: 'center' }}>
               <p style={styles.playAllTitle}>play all</p>
               {!isPremium && <p style={styles.playAllSublabel}>coo premium</p>}
-              <ChevronIcon open={playAllOpen} />
-            </button>
-            <button onClick={handlePlayAll} style={styles.playAllStartBtn}>
+            </div>
+            <button
+              onClick={e => { e.stopPropagation(); handlePlayAll(); }}
+              style={styles.playAllStartBtn}
+            >
               <PlayAllIcon color={isPremium ? colors.sageDeep : colors.textMuted} />
             </button>
-          </div>
+          </button>
           <div style={{
             overflow: 'hidden',
             maxHeight: playAllOpen ? '400px' : '0px',
@@ -998,6 +995,10 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
             </DndContext>
           </div>
         </div>
+      )}
+
+      {!playing && (
+        <div style={styles.soundPill}>{getPlaylistLabel(selectedPlaylist)}</div>
       )}
 
       <p style={styles.volumeNote}>keep volume comfortable · device away from baby</p>
@@ -1209,7 +1210,6 @@ const styles = {
     borderRadius: '50%',
     border: `1px solid ${colors.sageMid}`,
     opacity: 0,
-    transform: 'translate(-50%, -50%)',
     animation: 'rippleOut 3s ease-out infinite',
     pointerEvents: 'none',
   },
@@ -1329,18 +1329,19 @@ const styles = {
     maxWidth: '260px',
     lineHeight: 1.8,
     fontStyle: 'italic',
-    margin: '10px 0',
+    margin: '0px 0 20px',
     whiteSpace: 'pre-line',
   },
   soundPill: {
-    background: colors.surface,
-    border: `1px solid rgba(136,173,120,0.35)`,
+    background: 'rgba(205, 218, 187, 0.28)',
+    border: '1px solid rgba(136, 173, 120, 0.25)',
     borderRadius: '20px',
     padding: '6px 16px',
     fontSize: '11px',
     color: colors.text,
     letterSpacing: '0.08em',
     boxShadow: '0 0 12px rgba(136,173,120,0.15)',
+    marginTop: '20px',
   },
   volumeNote: {
     fontSize: '10px',
@@ -1348,32 +1349,26 @@ const styles = {
     letterSpacing: '0.08em',
     textAlign: 'center',
     margin: 0,
-    marginTop: 'auto',
+    marginTop: '28px',
   },
   playAllSection: {
     width: '100%',
     maxWidth: '320px',
-    background: 'rgba(205, 218, 187, 0.28)',
+    background: colors.surface,
     borderRadius: '20px',
-    border: '1px solid rgba(136, 173, 120, 0.25)',
+    border: `1px solid rgba(136,173,120,0.35)`,
     overflow: 'hidden',
   },
   playAllHeader: {
+    width: '100%',
     display: 'flex',
     alignItems: 'center',
-    padding: '4px 8px 4px 4px',
-    gap: '4px',
-  },
-  playAllToggle: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
+    padding: '10px 8px 10px 12px',
     gap: '8px',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    padding: '8px 8px 8px 12px',
-    textAlign: 'left',
+    boxSizing: 'border-box',
   },
   playAllTitle: {
     fontSize: '11px',
