@@ -3,6 +3,9 @@ import { Purchases } from '@revenuecat/purchases-capacitor';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { colors } from '../theme';
 import CooLogo from './CooLogo';
 import { startSession, stopSession, getPlaylistLabel, setLayerGain, PLAYLIST_SOUNDS, resumeContext } from '../audioEngine';
@@ -105,15 +108,11 @@ const PlayAllIcon = ({ color = 'white' }) => (
   </svg>
 );
 
-const ArrowUpIcon = ({ color }) => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="18 15 12 9 6 15"/>
-  </svg>
-);
-
-const ArrowDownIcon = ({ color }) => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="6 9 12 15 18 9"/>
+const DragHandleIcon = ({ color }) => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill={color}>
+    <circle cx="9" cy="7"  r="1.5"/><circle cx="15" cy="7"  r="1.5"/>
+    <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+    <circle cx="9" cy="17" r="1.5"/><circle cx="15" cy="17" r="1.5"/>
   </svg>
 );
 
@@ -172,6 +171,50 @@ function orbitPos(index, total) {
   };
 }
 
+function SortableChip({ id, index, isPremium, onPremiumGate }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled: !isPremium,
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '8px 16px',
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        background: isDragging ? colors.surfaceDeep : 'transparent',
+      }}
+    >
+      <span
+        {...(isPremium ? { ...attributes, ...listeners } : {})}
+        onClick={!isPremium ? onPremiumGate : undefined}
+        style={{
+          color: colors.textMuted,
+          cursor: isPremium ? 'grab' : 'pointer',
+          userSelect: 'none',
+          touchAction: 'none',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <DragHandleIcon color={colors.textMuted} />
+      </span>
+      <span style={{ fontSize: '10px', color: colors.textMuted, fontVariantNumeric: 'tabular-nums', width: '14px', flexShrink: 0, textAlign: 'center' }}>
+        {index + 1}
+      </span>
+      <span style={{ fontSize: '12px', color: colors.text, letterSpacing: '0.04em', flex: 1 }}>
+        {id.toLowerCase()}
+      </span>
+    </div>
+  );
+}
+
 export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const [aboutOpen,        setAboutOpen]        = useState(false);
   const [upgradeOpen,      setUpgradeOpen]       = useState(false);
@@ -187,13 +230,24 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
   const playingRef   = useRef(false);
 
   // ─── Play All state ──────────────────────────────────────────────────────────
-  const [playAllActive,    setPlayAllActive]    = useState(false);
-  const [playAllQueue,     setPlayAllQueue]     = useState(() => loadQueue());
-  const [playAllIndex,     setPlayAllIndex]     = useState(0);
-  const [queueReorderOpen, setQueueReorderOpen] = useState(false);
+  const [playAllActive, setPlayAllActive] = useState(false);
+  const [playAllOpen,   setPlayAllOpen]   = useState(false);
+  const [playAllQueue,  setPlayAllQueue]  = useState(() => loadQueue());
+  const [playAllIndex,  setPlayAllIndex]  = useState(0);
   const playAllActiveRef = useRef(false);
   const playAllIndexRef  = useRef(0);
   const playAllQueueRef  = useRef(playAllQueue);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  function handleDragEnd(event) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = playAllQueueRef.current.indexOf(active.id);
+      const newIndex = playAllQueueRef.current.indexOf(over.id);
+      updateQueue(arrayMove(playAllQueueRef.current, oldIndex, newIndex));
+    }
+  }
 
   const requestWakeLock = useCallback(async () => {
     if (!('wakeLock' in navigator)) return;
@@ -560,7 +614,7 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                 }
               }}
             >
-              unlock · $4.99
+              unlock · $3.99
             </button>
             <p
               style={{ ...styles.restoreLink, cursor: 'pointer' }}
@@ -864,20 +918,6 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         </div>
       )}
 
-      {/* Play All button — shown when not playing */}
-      {!playing && (
-        <button
-          onClick={handlePlayAll}
-          style={styles.playAllBtn}
-        >
-          <PlayAllIcon color={isPremium ? colors.sageDeep : colors.textMuted} />
-          <span style={{ ...styles.playAllLabel, color: isPremium ? colors.sageDeep : colors.textMuted }}>
-            play all
-          </span>
-          {!isPremium && <NorthStarIcon size={10} color={colors.textMuted} />}
-        </button>
-      )}
-
       {/* Breath cue */}
       <p style={styles.breathCue}>
         {playing
@@ -923,75 +963,40 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
         <div style={styles.soundPill}>{getPlaylistLabel(selectedPlaylist)}</div>
       )}
 
-      {/* Queue reorder — shown when not playing */}
+      {/* Unified Play All section — collapsible, shown when not playing */}
       {!playing && (
-        <div style={styles.queueCard}>
-          <button
-            style={styles.queueHeader}
-            onClick={() => isPremium ? setQueueReorderOpen(o => !o) : setUpgradeModalOpen(true)}
-          >
-            <div style={{ textAlign: 'center', flex: 1 }}>
-              <p style={styles.mixerTitle}>play all order</p>
-              {!isPremium && (
-                <p style={styles.mixerSublabel}>coo premium</p>
-              )}
-            </div>
-            {isPremium
-              ? <ChevronIcon open={queueReorderOpen} />
-              : <NorthStarIcon size={14} color={colors.textMuted} />
-            }
-          </button>
-          {isPremium && (
-            <div style={{
-              overflow: 'hidden',
-              maxHeight: queueReorderOpen ? '400px' : '0px',
-              opacity: queueReorderOpen ? 1 : 0,
-              transition: 'max-height 0.35s ease, opacity 0.2s ease',
-            }}>
-              <div style={styles.queueList}>
+        <div style={styles.playAllSection}>
+          <div style={styles.playAllHeader}>
+            <button onClick={() => setPlayAllOpen(o => !o)} style={styles.playAllToggle}>
+              <p style={styles.playAllTitle}>play all</p>
+              {!isPremium && <p style={styles.playAllSublabel}>coo premium</p>}
+              <ChevronIcon open={playAllOpen} />
+            </button>
+            <button onClick={handlePlayAll} style={styles.playAllStartBtn}>
+              <PlayAllIcon color={isPremium ? colors.sageDeep : colors.textMuted} />
+            </button>
+          </div>
+          <div style={{
+            overflow: 'hidden',
+            maxHeight: playAllOpen ? '400px' : '0px',
+            opacity: playAllOpen ? 1 : 0,
+            transition: 'max-height 0.35s ease, opacity 0.2s ease',
+          }}>
+            <div style={styles.playAllDivider} />
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={playAllQueue} strategy={verticalListSortingStrategy}>
                 {playAllQueue.map((name, idx) => (
-                  <div key={name} style={styles.queueRow}>
-                    <span style={styles.queueIndex}>{idx + 1}</span>
-                    <span style={styles.queueName}>{name.toLowerCase()}</span>
-                    <div style={styles.queueArrows}>
-                      <button
-                        style={{
-                          ...styles.queueArrowBtn,
-                          opacity: idx === 0 ? 0.25 : 1,
-                          cursor: idx === 0 ? 'default' : 'pointer',
-                        }}
-                        disabled={idx === 0}
-                        onClick={() => {
-                          if (idx === 0) return;
-                          const next = [...playAllQueue];
-                          [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
-                          updateQueue(next);
-                        }}
-                      >
-                        <ArrowUpIcon color={colors.textMuted} />
-                      </button>
-                      <button
-                        style={{
-                          ...styles.queueArrowBtn,
-                          opacity: idx === playAllQueue.length - 1 ? 0.25 : 1,
-                          cursor: idx === playAllQueue.length - 1 ? 'default' : 'pointer',
-                        }}
-                        disabled={idx === playAllQueue.length - 1}
-                        onClick={() => {
-                          if (idx === playAllQueue.length - 1) return;
-                          const next = [...playAllQueue];
-                          [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
-                          updateQueue(next);
-                        }}
-                      >
-                        <ArrowDownIcon color={colors.textMuted} />
-                      </button>
-                    </div>
-                  </div>
+                  <SortableChip
+                    key={name}
+                    id={name}
+                    index={idx}
+                    isPremium={isPremium}
+                    onPremiumGate={() => setUpgradeModalOpen(true)}
+                  />
                 ))}
-              </div>
-            </div>
-          )}
+              </SortableContext>
+            </DndContext>
+          </div>
         </div>
       )}
 
@@ -1345,83 +1350,60 @@ const styles = {
     margin: 0,
     marginTop: 'auto',
   },
-  playAllBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '7px',
-    background: colors.surface,
-    border: `1px solid ${colors.surfaceDeep}`,
-    borderRadius: '20px',
-    padding: '7px 18px',
-    cursor: 'pointer',
-    transition: 'opacity 0.2s ease',
-  },
-  playAllLabel: {
-    fontSize: '11px',
-    letterSpacing: '0.10em',
-    fontFamily: 'Georgia, serif',
-    fontStyle: 'italic',
-  },
-  queueCard: {
+  playAllSection: {
     width: '100%',
     maxWidth: '320px',
-    background: colors.surface,
-    borderRadius: '16px',
-    border: `1px solid ${colors.surfaceDeep}`,
+    background: 'rgba(205, 218, 187, 0.28)',
+    borderRadius: '20px',
+    border: '1px solid rgba(136, 173, 120, 0.25)',
     overflow: 'hidden',
   },
-  queueHeader: {
-    width: '100%',
+  playAllHeader: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '13px 16px',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    gap: '12px',
+    padding: '4px 8px 4px 4px',
+    gap: '4px',
   },
-  queueList: {
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '0 12px 12px',
-    gap: '2px',
-  },
-  queueRow: {
+  playAllToggle: {
+    flex: 1,
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '6px 4px',
-    borderBottom: `1px solid ${colors.surfaceDeep}`,
-  },
-  queueIndex: {
-    fontSize: '10px',
-    color: colors.textMuted,
-    fontVariantNumeric: 'tabular-nums',
-    width: '16px',
-    flexShrink: 0,
-    textAlign: 'center',
-  },
-  queueName: {
-    fontSize: '12px',
-    color: colors.text,
-    letterSpacing: '0.04em',
-    flex: 1,
-  },
-  queueArrows: {
-    display: 'flex',
-    gap: '2px',
-    flexShrink: 0,
-  },
-  queueArrowBtn: {
     background: 'none',
     border: 'none',
-    padding: '4px',
+    cursor: 'pointer',
+    padding: '8px 8px 8px 12px',
+    textAlign: 'left',
+  },
+  playAllTitle: {
+    fontSize: '11px',
+    color: colors.text,
+    letterSpacing: '0.10em',
+    margin: 0,
+    fontFamily: 'Georgia, serif',
+    fontStyle: 'italic',
+    flex: 1,
+  },
+  playAllSublabel: {
+    fontSize: '9px',
+    color: colors.textMuted,
+    letterSpacing: '0.08em',
+    margin: 0,
+  },
+  playAllStartBtn: {
+    background: 'none',
+    border: 'none',
+    padding: '8px',
+    cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: '6px',
-    transition: 'opacity 0.15s ease',
+    flexShrink: 0,
+  },
+  playAllDivider: {
+    height: '1px',
+    background: 'rgba(136, 173, 120, 0.2)',
+    margin: '0 16px',
   },
   playlistLabel: {
     fontSize: '13px',
