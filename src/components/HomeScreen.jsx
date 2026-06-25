@@ -593,13 +593,14 @@ export default function HomeScreen({ selectedPlaylist, onSelectPlaylist }) {
                   return;
                 }
                 try {
-                  const { offerings } = await Purchases.getOfferings();
-                  console.log('[IAP] offerings.current:', JSON.stringify(offerings.current));
-                  const pkg = offerings.current?.availablePackages.find(
-                    p => p.storeProduct.productIdentifier === IAP_PRODUCT_ID
+                  const offeringsResult = await Purchases.getOfferings();
+                  const currentOffering = offeringsResult.current || offeringsResult.all?.['default'];
+                  console.log('[IAP] currentOffering:', JSON.stringify(currentOffering));
+                  const pkg = currentOffering?.availablePackages?.find(
+                    p => (p.storeProduct?.productIdentifier ?? p.product?.identifier) === IAP_PRODUCT_ID
                   );
                   console.log('[IAP] pkg found:', !!pkg, '| looking for:', IAP_PRODUCT_ID);
-                  console.log('[IAP] available packages:', offerings.current?.availablePackages?.map(p => p.storeProduct.productIdentifier));
+                  console.log('[IAP] available packages:', currentOffering?.availablePackages?.map(p => p.storeProduct?.productIdentifier ?? p.product?.identifier));
                   if (!pkg) throw new Error('Product not found in offerings');
                   const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
                   if (customerInfo.entitlements.active[IAP_ENTITLEMENT_ID]) {
